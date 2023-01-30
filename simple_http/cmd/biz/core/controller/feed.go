@@ -3,9 +3,10 @@ package controller
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
+	"simple-main/cmd/biz"
 	"simple-main/cmd/biz/core/service"
+	"simple-main/pkg/configs"
 	"strconv"
 	"time"
 )
@@ -20,11 +21,17 @@ import (
 var feedService = service.GetFeedServiceImpl()
 
 func Feed(ctx context.Context, c *app.RequestContext) {
-	token := c.Query("token")
-	hlog.Info(token)
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	var userId int64
+	if v == nil {
+		userId = -1
+	} else {
+		userId = v.(*biz.User).Id
+	}
 
 	lastTime, _ := strconv.ParseInt(c.Query("last_time"), 10, 64)
 
-	resp := feedService.GetFeed(ctx, time.Unix(lastTime, 0), 1)
+	resp := feedService.GetFeed(ctx, time.Unix(lastTime, 0), userId)
 	c.JSON(http.StatusOK, resp)
 }

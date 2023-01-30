@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"mime/multipart"
 	"net/http"
 	"path"
 	"path/filepath"
 	"simple-main/cmd/biz"
 	"simple-main/cmd/biz/core/service"
-	"simple-main/cmd/common/minio"
+	"simple-main/pkg/configs"
 	"sync"
 )
 
@@ -24,9 +24,11 @@ import (
 var publishService = service.GetPublishServiceImpl()
 
 func Publish(ctx context.Context, c *app.RequestContext) {
-	token := c.PostForm("token")
+	// 获取请求参数
 	title := c.PostForm("title")
-	hlog.Info("token :" + token)
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	userId := v.(*biz.User).Id
 
 	data, err := c.FormFile("data")
 	if err != nil {
@@ -36,7 +38,7 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 	}
 
 	fileName := filepath.Base(data.Filename)
-	finalName := fmt.Sprintf("%d_%s", 1, title+path.Ext(fileName))
+	finalName := fmt.Sprintf("%d_%s", userId, title+path.Ext(fileName))
 
 	resp := publishService.PublishVideo(
 		ctx,
@@ -45,7 +47,8 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 			UserId:         1,
 			Title:          title,
 		},
-		func(dstPath string) (err error) {
+		// 并发在服务器保存和上传 MinIO
+		func(dstPath string, uploadToMinIO func(data *multipart.FileHeader) error) (err error) {
 			// wait group 控制并发
 			var wg sync.WaitGroup
 			wg.Add(2)
@@ -56,7 +59,7 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 
 			var uploadErr error
 			go func() {
-				uploadErr = minio.UploadVideo(ctx, finalName, data)
+				uploadErr = uploadToMinIO(data)
 				wg.Done()
 			}()
 
@@ -70,6 +73,10 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 }
 
 func PublishList(ctx context.Context, c *app.RequestContext) {
-	resp := publishService.GetPublishList(ctx, 1)
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	userId := v.(*biz.User).Id
+
+	resp := publishService.GetPublishList(ctx, userId)
 	c.JSON(http.StatusOK, resp)
 }

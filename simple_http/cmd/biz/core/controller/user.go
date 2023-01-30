@@ -39,21 +39,22 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	if resp, ok := checkUserInfo(username, password); !ok {
-		c.JSON(http.StatusBadRequest, resp)
+	if len(username) == 0 || len(password) == 0 {
+		c.Set("resp", biz.NewFailureResponse("用户名或密码不能为空"))
+		c.Set("status", http.StatusBadRequest)
 		return
 	}
 
 	resp := userService.Login(ctx, username, password)
-	c.JSON(http.StatusOK, resp)
+	c.Set("resp", resp)
 }
 
 func UserRegister(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	if resp, ok := checkUserInfo(username, password); !ok {
-		c.JSON(http.StatusBadRequest, resp)
+	if len(username) == 0 || len(password) == 0 {
+		c.JSON(http.StatusBadRequest, biz.NewFailureResponse("用户名或密码不能为空"))
 		return
 	}
 
@@ -65,13 +66,4 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		})
 
 	c.JSON(http.StatusOK, resp)
-}
-
-// checkUserInfo 检查用户输入的用户名和密码字符串是否存在或为空
-func checkUserInfo(username string, password string) (*biz.Response, bool) {
-	if username == "" || password == "" {
-		resp := biz.NewFailureResponse("用户名或密码不能为空")
-		return resp, false
-	}
-	return nil, true
 }

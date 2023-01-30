@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"mime/multipart"
 	"os"
 	"os/exec"
 	"path"
@@ -60,7 +61,7 @@ func (ps *publishServiceImpl) GetPublishList(ctx context.Context, userId int64) 
 	}
 
 	// 转换为 []biz.Video
-	videoList, err := GetBizVideoList(ctx, videos)
+	videoList, err := GetBizVideoList(ctx, videos, userId)
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -89,7 +90,9 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 	// 构建视频保存服务器路径
 	videoFilePath := filepath.Join(configs.VideoPathPrefix, req.VideoFinalName)
 	// 执行视频保存服务器和上传 MinIO
-	if err := Upload(videoFilePath); err != nil {
+	if err := Upload(videoFilePath, func(data *multipart.FileHeader) error {
+		return minio.UploadVideo(ctx, req.VideoFinalName, data)
+	}); err != nil {
 		resp = biz.NewErrorResponse(fmt.Errorf("视频上传出错"))
 		hlog.Error(err)
 		return
@@ -157,8 +160,8 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 	return
 }
 
-// UploadMethod 视频文件上传方法 dstPath 为服务器保存路径
-type UploadMethod func(dstPath string) error
+// UploadMethod 视频文件上传方法 dstPath 为服务器保存路径, uploadToMinIO 中调用 minio.UploadVideo
+type UploadMethod func(dstPath string, uploadToMinIO func(data *multipart.FileHeader) error) error
 
 func getAndUploadCover(ctx context.Context, req *VideoPublishRequest) <-chan string {
 	coverFinalName, readErr := readFrameAsJpeg(req.VideoFinalName)

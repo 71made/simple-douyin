@@ -5,6 +5,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"simple-main/cmd/common/db"
+	"simple-main/cmd/common/jwt"
 	"simple-main/cmd/common/minio"
 	"simple-main/cmd/common/router"
 )
@@ -19,6 +20,7 @@ import (
 func Init(ctx context.Context, h *server.Hertz) {
 	db.Init()
 	minio.Init(ctx)
+	jwt.Init()
 	router.Register(h)
 
 	// hlog init

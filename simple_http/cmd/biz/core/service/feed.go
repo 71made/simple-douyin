@@ -49,7 +49,7 @@ func (fs *feedServiceImpl) GetFeed(ctx context.Context, lastTime time.Time, user
 	}
 
 	// 转换为 []biz.Video
-	videoList, err := GetBizVideoList(ctx, videos)
+	videoList, err := GetBizVideoList(ctx, videos, userId)
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -62,7 +62,7 @@ func (fs *feedServiceImpl) GetFeed(ctx context.Context, lastTime time.Time, user
 	return
 }
 
-func GetBizVideoList(ctx context.Context, videos []model.Video) ([]biz.Video, error) {
+func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([]biz.Video, error) {
 	// 构建转换实体
 	var videoList = make([]biz.Video, len(videos))
 	// 缓存 author
@@ -92,6 +92,13 @@ func GetBizVideoList(ctx context.Context, videos []model.Video) ([]biz.Video, er
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
 			//IsFavorite:    false,
+		}
+		// 处理未登陆用户
+		if userId == -1 {
+			author.IsFollow = false
+			videoList[i].IsFavorite = false
+		} else {
+
 		}
 	}
 	return videoList, nil
