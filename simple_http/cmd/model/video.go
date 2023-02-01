@@ -4,7 +4,7 @@ import (
 	"context"
 	"gorm.io/gorm"
 	"simple-main/cmd/common/db"
-	"simple-main/pkg/configs"
+	"simple-main/cmd/configs"
 )
 
 /*
@@ -36,9 +36,9 @@ func QueryVideos(ctx context.Context, options ...PageOption) ([]Video, error) {
 		opt(page)
 	}
 
-	if err := page.PageCondition(
+	if err := page.Exec(
 		db.GetInstance().WithContext(ctx).
-			Order("created_at")).Find(&res).Error; err != nil {
+			Order("created_at DESC")).Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -47,7 +47,7 @@ func QueryVideos(ctx context.Context, options ...PageOption) ([]Video, error) {
 func QueryVideosByUserId(ctx context.Context, userId int64) ([]Video, error) {
 	res := make([]Video, 0)
 	if err := db.GetInstance().WithContext(ctx).
-		Where("author_id = ?", userId).Order("created_at").Find(&res).Error; err != nil {
+		Where("author_id = ?", userId).Order("created_at DESC").Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return res, nil

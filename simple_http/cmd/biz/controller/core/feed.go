@@ -1,12 +1,12 @@
-package controller
+package core
 
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
 	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/core/service"
-	"simple-main/pkg/configs"
+	"simple-main/cmd/biz/service/core"
+	"simple-main/cmd/configs"
 	"strconv"
 	"time"
 )
@@ -18,8 +18,10 @@ import (
  @Description:
 */
 
-var feedService = service.GetFeedServiceImpl()
+var feedService = core.GetFeedServiceImpl()
 
+// Feed
+// @router /douyin/feed/ [POST]
 func Feed(ctx context.Context, c *app.RequestContext) {
 	// 获取 JWT 回设的 userId
 	v, _ := c.Get(configs.IdentityKey)

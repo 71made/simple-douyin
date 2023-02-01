@@ -1,4 +1,4 @@
-package controller
+package core
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
 	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/core/service"
+	"simple-main/cmd/biz/service/core"
 	"simple-main/cmd/model"
 	"strconv"
 )
@@ -19,8 +19,10 @@ import (
  @Description: 用户相关服务接口处理的 controller
 */
 
-var userService = service.GetUserServiceImpl()
+var userService = core.GetUserServiceImpl()
 
+// UserInfo
+// @router /douyin/user/ [GET]
 func UserInfo(ctx context.Context, c *app.RequestContext) {
 	userId, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	if err != nil {
@@ -35,6 +37,11 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// UserLogin
+// @router /douyin/user/login/ [POST]
+// 注意: 使用 JWT 中间件后, 路由不再直接绑定此方法, 而是在 JWT 中配置的 Authenticator(认证器) 方法中调用,
+// 而路由则直接绑定的 JWT 提供的 LoginHandler 方法. 对于 UserLogin 返回的 resp 和 status 调整为
+// 通过 app.RequestContext 传递, 最终再通过 JWT 配置的 Unauthorized(未授权的) 回调方法写入 JSON 返回给客户端
 func UserLogin(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")
@@ -49,6 +56,8 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	c.Set("resp", resp)
 }
 
+// UserRegister
+// @router /douyin/user/register/ [POST]
 func UserRegister(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")

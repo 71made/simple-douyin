@@ -6,7 +6,8 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"net/http"
 	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/core/controller"
+	"simple-main/cmd/biz/controller/core"
+	"simple-main/cmd/biz/controller/extra/first"
 	"simple-main/cmd/common/jwt"
 )
 
@@ -30,27 +31,27 @@ func Register(r *server.Hertz) {
 		if token := c.Query("token"); len(token) != 0 {
 			jwt.GetInstance().MiddlewareFunc()(ctx, c)
 		}
-	}}, controller.Feed)...)
+	}}, core.Feed)...)
 	{
 		_user := root.Group("/user")
 		// 用户信息
-		_user.GET("/", controller.UserInfo)
+		_user.GET("/", core.UserInfo)
 		// 登陆, 使用 Hertz 中间价提供的处理方法
 		_user.POST("/login/", jwt.GetInstance().LoginHandler)
 		// 注册
-		_user.POST("/register/", controller.UserRegister)
+		_user.POST("/register/", core.UserRegister)
 
 		_publish := root.Group("/publish", jwt.GetInstance().MiddlewareFunc())
 		// 视频投稿
-		_publish.POST("/action/", controller.Publish)
+		_publish.POST("/action/", core.Publish)
 		// 获取视频列表
-		_publish.GET("/list/", controller.PublishList)
+		_publish.GET("/list/", core.PublishList)
 
-		_favourite := root.Group("/favourite", jwt.GetInstance().MiddlewareFunc())
+		_favorite := root.Group("/favorite", jwt.GetInstance().MiddlewareFunc())
 		// 视频点赞/取消点赞
-		_favourite.POST("/action/", UnsupportedMethod)
+		_favorite.POST("/action/", first.FavoriteAction)
 		// 喜欢视频列表
-		_favourite.GET("/list/", UnsupportedMethod)
+		_favorite.GET("/list/", first.FavoriteList)
 
 		_comment := root.Group("/comment", jwt.GetInstance().MiddlewareFunc())
 		// 发表评论

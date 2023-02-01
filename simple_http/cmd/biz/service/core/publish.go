@@ -1,4 +1,4 @@
-package service
+package core
 
 import (
 	"context"
@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"simple-main/cmd/biz"
 	"simple-main/cmd/common/minio"
+	"simple-main/cmd/configs"
 	"simple-main/cmd/model"
-	"simple-main/pkg/configs"
 	"strings"
 )
 
@@ -93,8 +93,8 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 	if err := Upload(videoFilePath, func(data *multipart.FileHeader) error {
 		return minio.UploadVideo(ctx, req.VideoFinalName, data)
 	}); err != nil {
-		resp = biz.NewErrorResponse(fmt.Errorf("视频上传出错"))
 		hlog.Error(err)
+		resp = biz.NewErrorResponse(fmt.Errorf("视频上传出错"))
 		return
 	}
 
@@ -105,7 +105,7 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 	newVideo := model.Video{
 		AuthorId: uint(req.UserId),
 		PlayUri:  req.VideoFinalName,
-		CoverUri: "empty_cover.jpeg", // 为保证都投稿视频能有封面, 先设置为默认封面, 封面上传成功后再更新
+		CoverUri: configs.EmptyCoverName, // 为保证都投稿视频能有封面, 先设置为默认封面, 封面上传成功后再更新
 		Title:    req.Title,
 	}
 
@@ -123,7 +123,7 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 		err := model.UpdateVideoCoverUri(ctx, &newVideo)
 		// 更新失败, 恢复默认封面
 		if err != nil {
-			newVideo.CoverUri = "empty_cover.jpeg"
+			newVideo.CoverUri = configs.EmptyCoverName
 			err = errors.New("video's cover image update fail")
 		}
 
@@ -152,7 +152,7 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 
 			if coverFinalName != "" {
 				go func() {
-					_ = minio.RemoveVideo(ctx, coverFinalName)
+					_ = minio.RemoveCover(ctx, coverFinalName)
 				}()
 			}
 		}

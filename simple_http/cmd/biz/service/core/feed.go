@@ -1,11 +1,11 @@
-package service
+package core
 
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"simple-main/cmd/biz"
+	"simple-main/cmd/configs"
 	"simple-main/cmd/model"
-	"simple-main/pkg/configs"
 	"time"
 )
 
@@ -48,6 +48,12 @@ func (fs *feedServiceImpl) GetFeed(ctx context.Context, lastTime time.Time, user
 		return
 	}
 
+	if len(videos) == 0 {
+		resp.VideoList = make([]biz.Video, 0)
+		resp.Response = *biz.NewSuccessResponse("获取成功")
+		return
+	}
+
 	// 转换为 []biz.Video
 	videoList, err := GetBizVideoList(ctx, videos, userId)
 	if err != nil {
@@ -62,11 +68,20 @@ func (fs *feedServiceImpl) GetFeed(ctx context.Context, lastTime time.Time, user
 	return
 }
 
+// NotLoginUserId 定义未登陆用户 id 为 -1
+const NotLoginUserId = -1
+
+// GetBizVideoList
+// 类型转换 []model.Video -> []biz.Video, 用户未登陆时, userId 传递 NotLoginUserId
 func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([]biz.Video, error) {
 	// 构建转换实体
 	var videoList = make([]biz.Video, len(videos))
 	// 缓存 author
 	var authors = make(map[uint]biz.User)
+	// 缓存 video id 为后续查询关系做准备
+	var videoIds = make([]int64, len(videos))
+	// 保存 video id 与实体间的映射关系
+	var videoMap = make(map[uint]*biz.Video, len(videos))
 	for i, video := range videos {
 		author, found := authors[video.AuthorId]
 		if !found {
@@ -93,13 +108,21 @@ func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([
 			CommentCount:  video.CommentCount,
 			//IsFavorite:    false,
 		}
-		// 处理未登陆用户
-		if userId == -1 {
-			author.IsFollow = false
-			videoList[i].IsFavorite = false
-		} else {
+		videoIds[i] = int64(video.ID)
+		videoMap[video.ID] = &videoList[i]
+	}
+	// 填充剩下参数
+	if userId != NotLoginUserId {
+		// 查询是否关注
+		//author.IsFollow = false
+		// 查询是否点赞
+		favorites, _ := model.QueryFavorites(ctx, userId, videoIds)
 
+		for _, favorite := range favorites {
+			video := videoMap[favorite.VideoId]
+			video.IsFavorite = favorite.IsFavorite()
 		}
+
 	}
 	return videoList, nil
 }

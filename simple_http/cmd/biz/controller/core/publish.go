@@ -1,4 +1,4 @@
-package controller
+package core
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 	"path"
 	"path/filepath"
 	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/core/service"
-	"simple-main/pkg/configs"
+	"simple-main/cmd/biz/service/core"
+	"simple-main/cmd/configs"
 	"sync"
 )
 
@@ -21,8 +21,10 @@ import (
  @Description: 发布视频、发布列表服务接口处理的 controller
 */
 
-var publishService = service.GetPublishServiceImpl()
+var publishService = core.GetPublishServiceImpl()
 
+// Publish
+// @router /douyin/publish/action/ [POST]
 func Publish(ctx context.Context, c *app.RequestContext) {
 	// 获取请求参数
 	title := c.PostForm("title")
@@ -42,12 +44,12 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 
 	resp := publishService.PublishVideo(
 		ctx,
-		&service.VideoPublishRequest{
+		&core.VideoPublishRequest{
 			VideoFinalName: finalName,
 			UserId:         1,
 			Title:          title,
 		},
-		// 并发在服务器保存和上传 MinIO
+		// 并发实现服务器保存和上传 MinIO
 		func(dstPath string, uploadToMinIO func(data *multipart.FileHeader) error) (err error) {
 			// wait group 控制并发
 			var wg sync.WaitGroup
@@ -72,6 +74,8 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// PublishList
+// @router /douyin/publish/list/ [GET]
 func PublishList(ctx context.Context, c *app.RequestContext) {
 	// 获取 JWT 回设的 userId
 	v, _ := c.Get(configs.IdentityKey)

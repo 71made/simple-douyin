@@ -18,7 +18,7 @@ type Page struct {
 	StartTime time.Time // 查询记录最晚创建/更新时间
 }
 
-func (p *Page) PageCondition(db *gorm.DB) *gorm.DB {
+func (p *Page) Exec(db *gorm.DB) *gorm.DB {
 	tmp := db.Offset(p.Offset)
 	if p.Limit != 0 {
 		tmp = tmp.Limit(p.Limit)

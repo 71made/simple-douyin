@@ -7,7 +7,7 @@ import (
 	"gorm.io/plugin/opentelemetry/tracing"
 	"log"
 	"os"
-	"simple-main/pkg/configs"
+	"simple-main/cmd/configs"
 	"time"
 )
 

@@ -25,4 +25,5 @@ const ServerAddr = "http://192.168.0.107:9000" // 项目本地测试图床 IP �
 const (
 	VideoUriPrefix = "/" + BucketName + Video // 视频路径 uri 前缀
 	CoverUriPrefix = "/" + BucketName + Cover // 视频封面路径 uri 前缀
+	EmptyCoverName = "empty_cover.jpeg"
 )

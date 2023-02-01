@@ -5,7 +5,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"simple-main/cmd/common/db"
-	"simple-main/pkg/configs"
+	"simple-main/cmd/configs"
 )
 
 /*
@@ -61,6 +61,7 @@ func IsExistUser(ctx context.Context, username string) (bool, error) {
 	}
 	ids := make([]int64, 0)
 	if err := db.GetInstance().WithContext(ctx).
+		Model(&User{}).
 		Select("id").
 		Where("username = ?", username).
 		Find(&ids).Error; err != nil {

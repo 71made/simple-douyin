@@ -1,4 +1,4 @@
-package service
+package core
 
 import (
 	"context"
@@ -39,7 +39,7 @@ func GetUserServiceImpl() UserService {
 	return usInstance
 }
 
-// UserServiceImpl 对应服务接口实现
+// userServiceImpl 对应服务接口实现
 type userServiceImpl struct{}
 
 var usInstance = &userServiceImpl{}

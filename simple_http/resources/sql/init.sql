@@ -31,6 +31,20 @@ CREATE TABLE `user_video`
     KEY              `idx_created_at` (`created_at`) COMMENT 'Video create time index'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='User video table';
 
+CREATE TABLE `favorite`
+(
+    `id`           bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+    `user_id`      bigint unsigned NOT NULL COMMENT 'User id',
+    `video_id`     bigint unsigned NOT NULL COMMENT 'Video id',
+    `is_favorite` tinyint unsigned NOT NULL DEFAULT 0 COMMENT 'Favorite: 1-true, 2-false',
+    `created_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User video create time',
+    `updated_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'User video update time',
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
+    FOREIGN KEY (`video_id`) REFERENCES `user_video`(`id`),
+    KEY              `idx_author_id_video_id` (`user_id`, `video_id`) COMMENT 'User id and video id index',
+    KEY              `idx_updated_at` (`updated_at`) COMMENT 'favorite update time index'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='User favorite video table';
 # CREATE TABLE `note`
 # (
 #     `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',

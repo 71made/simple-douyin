@@ -6,9 +6,9 @@ import (
 	"github.com/hertz-contrib/jwt"
 	"net/http"
 	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/core/controller"
-	"simple-main/cmd/biz/core/service"
-	"simple-main/pkg/configs"
+	"simple-main/cmd/biz/controller/core"
+	core2 "simple-main/cmd/biz/service/core"
+	"simple-main/cmd/configs"
 	"sync"
 	"time"
 )
@@ -47,9 +47,9 @@ func Init() {
 			return jwt.MapClaims{}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
-			controller.UserLogin(ctx, c)
+			core.UserLogin(ctx, c)
 			resp, found := c.Get("resp")
-			loginResp := resp.(*service.UserLoginResponse)
+			loginResp := resp.(*core2.UserLoginResponse)
 			if found && loginResp.StatusCode == 0 {
 				return loginResp.UserId, nil
 			}
@@ -62,7 +62,7 @@ func Init() {
 			}
 
 			resp, found := c.Get("resp")
-			loginResp := resp.(*service.UserLoginResponse)
+			loginResp := resp.(*core2.UserLoginResponse)
 			if found && loginResp.StatusCode == 0 {
 				loginResp.Token = token
 			}
