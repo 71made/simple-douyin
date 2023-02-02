@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -33,7 +34,7 @@ type Favorite struct {
 }
 
 func (f *Favorite) TableName() string {
-	return configs.Favorite
+	return configs.FavoriteTable
 }
 
 func (f *Favorite) IsFavorite() bool {
@@ -43,35 +44,37 @@ func (f *Favorite) IsFavorite() bool {
 // BeforeCreate
 // 通过 GORM 提供的 Hook 实现关联更新 video 记录的 favorite_count
 func (f *Favorite) BeforeCreate(tx *gorm.DB) (err error) {
-	return f.syncUpdateFavoriteCount(tx)
+	return f.syncUpdateFavoriteCount(tx, gorm.Expr("favorite_count + 1"))
 }
 
 // BeforeUpdate
 // 同理, 通过 Hook 实现关联更新 video 记录的 favorite_count
 func (f *Favorite) BeforeUpdate(tx *gorm.DB) (err error) {
-	return f.syncUpdateFavoriteCount(tx)
-}
-
-func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB) (err error) {
 	var expr clause.Expr
 	if f.IsFavorite() {
 		expr = gorm.Expr("favorite_count + 1")
 	} else {
 		expr = gorm.Expr("favorite_count - 1")
 	}
+	return f.syncUpdateFavoriteCount(tx, expr)
+}
+
+func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
+
 	updateRes := tx.Model(&Video{}).Where("id = ?", f.VideoId).
 		Update("favorite_count", expr)
-	if updateRes.Error != nil {
+	if err = updateRes.Error; err != nil {
 		return err
 	}
-	if updateRes.RowsAffected == 1 {
-		return nil
-	} else if updateRes.RowsAffected > 1 {
-		// 对于影响数超过 1 的更新, 逻辑上是不合理的, 可能是 video 产生脏数据
-		// 实际上, 在 主键 + 外键 约束下不可能出现此情况, 仅做兜底处理
-		return fmt.Errorf("user_video table records is dirty")
+	if updateRes.RowsAffected <= 0 {
+		return errors.New("update user_video record fail")
 	}
-	return
+	if updateRes.RowsAffected > 1 {
+		// 对于影响数超过 1 的更新, 逻辑上是不合理的, 可能是 video 产生脏数据
+		// 实际上, 在主键约束下不可能出现此情况, 仅做兜底处理
+		return errors.New("user_video table records is dirty")
+	}
+	return nil
 }
 
 func CreateFavorite(ctx context.Context, f *Favorite) error {

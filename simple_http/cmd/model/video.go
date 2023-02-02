@@ -69,10 +69,6 @@ func CreateVideo(ctx context.Context, video *Video) error {
 	return db.GetInstance().WithContext(ctx).Create(video).Error
 }
 
-func UpdateVideo(ctx context.Context, video *Video) error {
-	return db.GetInstance().WithContext(ctx).Model(video).Updates(video).Error
-}
-
 func UpdateVideoCoverUri(ctx context.Context, video *Video) error {
 	return db.GetInstance().WithContext(ctx).Model(video).Update("cover_uri", video.CoverUri).Error
 }

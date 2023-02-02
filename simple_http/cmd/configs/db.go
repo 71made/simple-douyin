@@ -8,9 +8,10 @@ package configs
 */
 
 const (
-	UserTable  = "user"
-	VideoTable = "user_video"
-	Favorite   = "favorite"
-
 	MySQLDataBaseDSN = "gorm:gorm@tcp(localhost:3308)/douyin?charset=utf8&parseTime=True&loc=Local"
+
+	UserTable     = "user"
+	VideoTable    = "user_video"
+	FavoriteTable = "favorite"
+	CommentTable  = "video_comment"
 )

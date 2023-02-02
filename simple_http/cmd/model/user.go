@@ -29,7 +29,18 @@ func (u *User) TableName() string {
 
 func QueryUsers(ctx context.Context, username string) ([]User, error) {
 	res := make([]User, 0)
-	if err := db.GetInstance().WithContext(ctx).Where("username = ?", username).Find(&res).Error; err != nil {
+	if err := db.GetInstance().WithContext(ctx).
+		Model(&User{}).Where("username = ?", username).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+func QueryUsersByIds(ctx context.Context, userIds []int64) ([]User, error) {
+	res := make([]User, 0)
+	if err := db.GetInstance().
+		Model(&User{}).WithContext(ctx).Where("id in ?", userIds).
+		Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return res, nil

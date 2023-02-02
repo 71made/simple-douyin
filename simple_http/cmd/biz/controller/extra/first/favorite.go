@@ -22,7 +22,7 @@ import (
 var favoriteServiceImpl = first.FavoriteServiceImpl()
 
 // FavoriteAction
-// @router /douyin/favorite/action/ [GET]
+// @router /douyin/favorite/action/ [POST]
 func FavoriteAction(ctx context.Context, c *app.RequestContext) {
 	var req first.FavoriteRequest
 
@@ -54,9 +54,9 @@ func FavoriteAction(ctx context.Context, c *app.RequestContext) {
 
 }
 
-// FavoriteList
+// GetFavoriteList
 // @route /douyin/favorite/list/ [GET]
-func FavoriteList(ctx context.Context, c *app.RequestContext) {
+func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 	// 获取 JWT 回设的 userId
 	v, _ := c.Get(configs.IdentityKey)
 	userId := v.(*biz.User).Id

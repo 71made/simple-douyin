@@ -51,13 +51,13 @@ func Register(r *server.Hertz) {
 		// 视频点赞/取消点赞
 		_favorite.POST("/action/", first.FavoriteAction)
 		// 喜欢视频列表
-		_favorite.GET("/list/", first.FavoriteList)
+		_favorite.GET("/list/", first.GetFavoriteList)
 
 		_comment := root.Group("/comment", jwt.GetInstance().MiddlewareFunc())
 		// 发表评论
-		_comment.POST("/action/", UnsupportedMethod)
+		_comment.POST("/action/", first.CommentAction)
 		// 评论列表
-		_comment.GET("/list/", UnsupportedMethod)
+		_comment.GET("/list/", first.GetCommentList)
 
 		_relation := root.Group("/relation", jwt.GetInstance().MiddlewareFunc())
 		// 关注/取消关注

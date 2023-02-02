@@ -33,27 +33,32 @@ CREATE TABLE `user_video`
 
 CREATE TABLE `favorite`
 (
-    `id`           bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
-    `user_id`      bigint unsigned NOT NULL COMMENT 'User id',
-    `video_id`     bigint unsigned NOT NULL COMMENT 'Video id',
+    `id`          bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+    `user_id`     bigint unsigned NOT NULL COMMENT 'User id',
+    `video_id`    bigint unsigned NOT NULL COMMENT 'Video id',
     `is_favorite` tinyint unsigned NOT NULL DEFAULT 0 COMMENT 'Favorite: 1-true, 2-false',
-    `created_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User video create time',
-    `updated_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'User video update time',
+    `created_at`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User video create time',
+    `updated_at`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'User video update time',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY (`user_id`, `video_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
+    FOREIGN KEY (`video_id`) REFERENCES `user_video`(`id`),
+    KEY            `idx_author_id_video_id` (`user_id`, `video_id`) COMMENT 'User id and video id index',
+    KEY            `idx_updated_at` (`updated_at`) COMMENT 'User favorite update time index'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='User favorite video table';
+
+CREATE TABLE `video_comment`
+(
+    `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+    `user_id`    bigint unsigned NOT NULL COMMENT 'User id',
+    `video_id`   bigint unsigned NOT NULL COMMENT 'Video id',
+    `content`    varchar(255) NOT NULL COMMENT 'Comment content',
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Video comment create time',
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Video comment update time',
+    `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Video comment delete time',
     PRIMARY KEY (`id`),
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
     FOREIGN KEY (`video_id`) REFERENCES `user_video`(`id`),
-    KEY              `idx_author_id_video_id` (`user_id`, `video_id`) COMMENT 'User id and video id index',
-    KEY              `idx_updated_at` (`updated_at`) COMMENT 'favorite update time index'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='User favorite video table';
-# CREATE TABLE `note`
-# (
-#     `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
-#     `user_id`    int(64) NOT NULL DEFAULT 0 COMMENT 'UserID',
-#     `title`      varchar(128) NOT NULL DEFAULT '' COMMENT 'Title',
-#     `content`    TEXT NULL COMMENT 'Content',
-#     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Note create time',
-#     `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Note update time',
-#     `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Note delete time',
-#     PRIMARY KEY (`id`),
-#     KEY          `idx_user_id_title` (`user_id`, `title`) COMMENT 'UserID Title index'
-# ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Note table';
+    KEY          `idx_video_id` (`video_id`) COMMENT 'Video id index',
+    KEY          `idx_created_at` (`created_at`) COMMENT 'Video comment create time index'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Video comment table';
