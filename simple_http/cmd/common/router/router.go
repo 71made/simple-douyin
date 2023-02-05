@@ -8,7 +8,9 @@ import (
 	"simple-main/cmd/biz"
 	"simple-main/cmd/biz/controller/core"
 	"simple-main/cmd/biz/controller/extra/first"
+	"simple-main/cmd/biz/controller/extra/second"
 	"simple-main/cmd/common/jwt"
+	"strings"
 )
 
 /*
@@ -59,21 +61,31 @@ func Register(r *server.Hertz) {
 		// 评论列表
 		_comment.GET("/list/", first.GetCommentList)
 
-		_relation := root.Group("/relation", jwt.GetInstance().MiddlewareFunc())
+		_relation := root.Group("/relation", func(ctx context.Context, c *app.RequestContext) {
+			// 对于 /follow/list/ 和 /follower/list/ 接口, 在用户未登陆时也可以请求查看其他用户的关注和粉丝列表
+			// 所以如果传入了 token, 此处需要手动调用 JWT 的 mw 校验和解析 token
+			// 但对于 /action/ 和 /friend/list/ 接口, 也是需要校验和解析 token 的
+			reqURI := c.GetRequest().URI().String()
+			if token := c.Query("token"); len(token) != 0 ||
+				strings.Contains(reqURI, "/action/") ||
+				strings.Contains(reqURI, "/friend/list/") {
+				jwt.GetInstance().MiddlewareFunc()(ctx, c)
+			}
+		})
 		// 关注/取消关注
-		_relation.POST("/action/", UnsupportedMethod)
+		_relation.POST("/action/", second.RelationAction)
 		// 关注者列表
-		_relation.GET("/follow/list/", UnsupportedMethod)
+		_relation.GET("/follow/list/", second.GetFollowList)
 		// 粉丝列表
-		_relation.GET("/follower/list/", UnsupportedMethod)
+		_relation.GET("/follower/list/", second.GetFollowerList)
 		// 好友列表
-		_relation.GET("/friend/list/", UnsupportedMethod)
+		_relation.GET("/friend/list/", second.GetFriendList)
 
 		_message := root.Group("/message", jwt.GetInstance().MiddlewareFunc())
 		// 轮训获取消息
-		_message.GET("/chat/", UnsupportedMethod)
+		_message.GET("/chat/", second.MessageChat)
 		// 发送消息
-		_message.POST("/action/", UnsupportedMethod)
+		_message.POST("/action/", second.MessageAction)
 	}
 }
 

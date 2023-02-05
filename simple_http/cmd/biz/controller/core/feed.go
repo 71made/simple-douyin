@@ -27,7 +27,7 @@ func Feed(ctx context.Context, c *app.RequestContext) {
 	v, _ := c.Get(configs.IdentityKey)
 	var userId int64
 	if v == nil {
-		userId = -1
+		userId = core.NotLoginUserId
 	} else {
 		userId = v.(*biz.User).Id
 	}

@@ -63,3 +63,17 @@ type User struct {
 	FollowerCount int64  `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
 }
+
+type Message struct {
+	Id         int64  `json:"id"`
+	FromUSerId int64  `json:"from_u_ser_id"`
+	ToUserId   int64  `json:"to_user_id"`
+	Content    string `json:"content"`
+	CreateTime string `json:"create_time"`
+}
+
+type FriendUser struct {
+	User
+	Message string `json:"message"`
+	MsgType int    `json:"msg_type"`
+}

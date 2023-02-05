@@ -79,11 +79,11 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId i
 	commentList := make([]biz.Comment, len(comments))
 
 	// 用于缓存 user 映射关系
-	var userMap = make(map[uint]*model.User)
+	var userMap = make(map[uint][]any)
 
 	for _, comment := range comments {
 		if _, found := userMap[comment.UserId]; !found {
-			userMap[comment.UserId] = nil
+			userMap[comment.UserId] = []any{nil, false}
 		}
 	}
 
@@ -107,19 +107,23 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId i
 			return
 		}
 		for _, user := range users {
-			userMap[user.ID] = &user
+			userMap[user.ID][0] = &user
 		}
 		wg.Done()
 	}()
 
 	go func() {
+		for _, id := range userIds {
+			userMap[uint(id)][1] = true
+		}
 		wg.Done()
 	}()
 
 	wg.Wait()
 	// 最终转换
 	for i, comment := range comments {
-		user := userMap[comment.UserId]
+		user := userMap[comment.UserId][0].(*model.User)
+		isFollow := userMap[comment.UserId][1].(bool)
 		commentList[i] = biz.Comment{
 			Id: int64(comment.ID),
 			User: biz.User{
@@ -127,7 +131,7 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId i
 				Name:          user.Username,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
-				//IsFollow:      false,
+				IsFollow:      isFollow,
 			},
 			Content:    comment.Content,
 			CreateDate: comment.CreatedAt.Format("01-02"),

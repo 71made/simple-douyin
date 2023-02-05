@@ -3,9 +3,11 @@ package model
 import (
 	"context"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"simple-main/cmd/common/db"
 	"simple-main/cmd/configs"
+	"strings"
 )
 
 /*
@@ -36,10 +38,18 @@ func QueryUsers(ctx context.Context, username string) ([]User, error) {
 	}
 	return res, nil
 }
+
+// QueryUsersByIds
+// 通过 ids 查询 model.User, 并按传入 ids 序列进行排序
 func QueryUsersByIds(ctx context.Context, userIds []int64) ([]User, error) {
 	res := make([]User, 0)
+	// 构造排序条件
+	str := strings.ReplaceAll(fmt.Sprintf("%v", userIds), " ", ",")
+	// 截取中间 id 序列
+	str = str[1 : len(str)-1]
 	if err := db.GetInstance().
 		Model(&User{}).WithContext(ctx).Where("id in ?", userIds).
+		Order("Field(id," + str + ")").
 		Find(&res).Error; err != nil {
 		return nil, err
 	}

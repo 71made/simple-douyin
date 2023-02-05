@@ -28,7 +28,7 @@ type Favorite struct {
 	ID           uint `gorm:"primarykey"`
 	UserId       uint
 	VideoId      uint
-	FavoriteType uint `gorm:"column:is_favorite"` // 1-点赞 2-取消点赞
+	FavoriteType uint `gorm:"column:is_favorite"` // 1-guan 2-取消点赞
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -39,6 +39,14 @@ func (f *Favorite) TableName() string {
 
 func (f *Favorite) IsFavorite() bool {
 	return f.FavoriteType == Favorable
+}
+
+func (f *Favorite) GetFavoriteType() uint {
+	// 过滤其他参数
+	if f.FavoriteType != Favorable {
+		f.FavoriteType = Unfavorable
+	}
+	return f.FavoriteType
 }
 
 // BeforeCreate
@@ -78,13 +86,30 @@ func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB, expr clause.Expr) (err e
 }
 
 func CreateFavorite(ctx context.Context, f *Favorite) error {
+
 	return db.GetInstance().WithContext(ctx).Create(f).Error
 }
 
 func UpdateFavorite(ctx context.Context, f *Favorite) error {
-	return db.GetInstance().WithContext(ctx).Model(f).
-		Where("user_id", f.UserId).Where("video_id", f.VideoId).
-		Update("is_favorite", f.FavoriteType).Error
+	err := db.GetInstance().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		updateRes := tx.Model(f).
+			Where("user_id", f.UserId).Where("video_id", f.VideoId).
+			Update("is_favorite", f.GetFavoriteType())
+
+		if updateRes.Error != nil {
+			return updateRes.Error
+		}
+		if updateRes.RowsAffected <= 0 {
+			return errors.New("update favorite record fail")
+		}
+		if updateRes.RowsAffected > 1 {
+			// 做兜底处理
+			return errors.New("favorite table records is dirty")
+		}
+		return nil
+	})
+
+	return err
 }
 
 func QueryFavorite(ctx context.Context, userId, videoId int64) (*Favorite, error) {

@@ -62,3 +62,38 @@ CREATE TABLE `video_comment`
     KEY          `idx_video_id` (`video_id`) COMMENT 'Video id index',
     KEY          `idx_created_at` (`created_at`) COMMENT 'Video comment create time index'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Video comment table';
+
+CREATE TABLE `user_relation`
+        (
+        `id`           bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+        `user_id`      bigint unsigned NOT NULL COMMENT 'User id',
+        `follower_id`  bigint unsigned NOT NULL COMMENT 'Follower user id',
+        `is_following` tinyint unsigned NOT NULL DEFAULT 0 COMMENT 'Following: 1-true, 2-false',
+        `is_friend`    tinyint unsigned NOT NULL DEFAULT 0 COMMENT 'Friend(Already following each other): 1-true, 2-false',
+        `created_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User relation create time',
+        `updated_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'User relation update time',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY (`user_id`, `follower_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
+    FOREIGN KEY (`follower_id`) REFERENCES `user`(`id`),
+    KEY            `idx_user_id_follower_id` (`user_id`, `follower_id`) COMMENT 'User follower ids index',
+    KEY            `idx_follower_id_user_id` (`follower_id`, `user_id`) COMMENT 'User follow ids index',
+    KEY            `idx_updated_at` (`updated_at`) COMMENT 'Follow relation update time index'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='User relation table';
+
+CREATE TABLE `message`
+(
+    `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+    `from_user_id`    bigint unsigned NOT NULL COMMENT 'User id',
+    `to_user_id` bigint unsigned NOT NULL COMMENT 'To user id',
+    `content`    text NOT NULL COMMENT 'Message content',
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Message create time',
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Message update time',
+    `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Message delete time',
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`from_user_id`) REFERENCES `user`(`id`),
+    FOREIGN KEY (`to_user_id`) REFERENCES `user`(`id`),
+    KEY            `idx_from_user_id_to_user_id` (`from_user_id`, `to_user_id`) COMMENT 'User send message index',
+    KEY            `idx_to_user_id_from_user_id` (`to_user_id`, `from_user_id`) COMMENT 'Message to user index',
+    KEY            `idx_updated_at` (`created_at`) COMMENT 'Message update time index'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='User Message table';

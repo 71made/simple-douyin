@@ -59,7 +59,7 @@ func (fs *favoriteServiceImpl) Action(ctx context.Context, req *FavoriteRequest)
 	// 没有记录则创建, 有则更新
 	if found == nil {
 		err = model.CreateFavorite(ctx, f)
-	} else if found.FavoriteType != f.FavoriteType {
+	} else if found.FavoriteType != f.GetFavoriteType() {
 		// 并且只对于不同的 type, 才触发更新
 		err = model.UpdateFavorite(ctx, f)
 	}

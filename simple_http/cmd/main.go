@@ -16,9 +16,11 @@ import (
 
 func main() {
 	tracer, cfg := tracing.NewServerTracer()
+
 	h := server.New(
 		server.WithHostPorts(":8080"),
 		server.WithMaxRequestBodySize(50*1024*1024),
+		//server.WithTransport(standard.NewTransporter),
 		tracer,
 	)
 	common.Init(context.Background(), h)
