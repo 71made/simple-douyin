@@ -130,6 +130,11 @@ func QueryFavorite(ctx context.Context, userId, videoId int64) (*Favorite, error
 
 func QueryFavorites(ctx context.Context, userId int64, videoIds []int64) ([]Favorite, error) {
 	res := make([]Favorite, 0)
+
+	if len(videoIds) == 0 {
+		return res, nil
+	}
+
 	if err := db.GetInstance().WithContext(ctx).
 		Model(&Favorite{}).
 		Where("user_id = ?", userId).

@@ -46,7 +46,28 @@ var msInstance = &messageServiceImpl{}
 func (ms *messageServiceImpl) Action(ctx context.Context, req *MessageRequest) (resp *biz.Response) {
 	switch req.ActionType {
 	case Send:
-		ms.sendMessage(ctx, req, resp)
+		{
+			if req.UserId == req.ToUserId {
+				resp = biz.NewFailureResponse("不可以给自己发送消息")
+				return
+			}
+			// 构建实体
+			newMessage := &model.Message{
+				FromUserId: uint(req.UserId),
+				ToUserId:   uint(req.ToUserId),
+				Content:    req.Content,
+			}
+
+			if err := model.CreateMessage(ctx, newMessage); err != nil {
+				hlog.Error(err)
+				resp = biz.NewErrorResponse(err)
+				return
+			}
+
+			resp = biz.NewSuccessResponse("发送消息成功")
+		}
+	default:
+		resp = biz.NewFailureResponse("非法操作")
 	}
 	return
 }
@@ -73,20 +94,4 @@ func (ms *messageServiceImpl) Chat(ctx context.Context, fromUserId, toUserId int
 	}
 	resp.Response = *biz.NewSuccessResponse("获取成功")
 	return
-}
-
-func (ms *messageServiceImpl) sendMessage(ctx context.Context, req *MessageRequest, resp *biz.Response) {
-	newMessage := &model.Message{
-		FromUserId: uint(req.UserId),
-		ToUserId:   uint(req.ToUserId),
-		Content:    req.Content,
-	}
-
-	if err := model.CreateMessage(ctx, newMessage); err != nil {
-		hlog.Error(err)
-		resp = biz.NewErrorResponse(err)
-		return
-	}
-
-	resp = biz.NewSuccessResponse("发送消息成功")
 }

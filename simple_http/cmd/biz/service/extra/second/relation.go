@@ -5,6 +5,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"simple-main/cmd/biz"
 	"simple-main/cmd/model"
+	"sync"
 )
 
 /*
@@ -46,6 +47,12 @@ type relationServiceImpl struct{}
 var rsInstance = &relationServiceImpl{}
 
 func (rs *relationServiceImpl) Action(ctx context.Context, req *RelationActionRequest) (resp *biz.Response) {
+
+	if req.UserId == req.ToUserId {
+		resp = biz.NewFailureResponse("不能关注自己")
+		return
+	}
+
 	// 构建实体
 	r := &model.Relation{
 		UserId:     uint(req.ToUserId),
@@ -93,7 +100,7 @@ func (rs *relationServiceImpl) FollowList(ctx context.Context, userId int64) (re
 		return
 	}
 
-	userList, err := rs.transToUsers(ctx, relations)
+	userList, err := rs.transToUsers(ctx, relations, userId, false)
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -115,7 +122,7 @@ func (rs *relationServiceImpl) FollowerList(ctx context.Context, userId int64) (
 		return
 	}
 
-	userList, err := rs.transToUsers(ctx, relations)
+	userList, err := rs.transToUsers(ctx, relations, userId, true)
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -149,27 +156,69 @@ func (rs *relationServiceImpl) FriendList(ctx context.Context, userId int64) (re
 	return
 }
 
-func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []model.Relation) ([]biz.User, error) {
+func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []model.Relation, userId int64, isFollower bool) ([]biz.User, error) {
 	userIds := make([]int64, len(relations))
+	// 用于缓存 isFollow 映射关系
+	var isFollowMap = make(map[uint]bool, len(relations))
 	for i, relation := range relations {
-		userIds[i] = int64(relation.UserId)
+		if isFollower {
+			userIds[i] = int64(relation.FollowerId)
+			isFollowMap[relation.FollowerId] = false
+		} else {
+			userIds[i] = int64(relation.UserId)
+			isFollowMap[relation.UserId] = true
+		}
 	}
 
-	users, err := model.QueryUsersByIds(ctx, userIds)
-	if err != nil {
-		return nil, err
+	// 最后构造 List
+	userList := make([]biz.User, len(userIds))
+
+	// 并发控制
+	var wg sync.WaitGroup
+	wg.Add(2)
+	// 并发查询
+	var QUsersErr, QRelationsErr error
+	var users []model.User
+
+	go func() {
+		users, QUsersErr = model.QueryUsersByIds(ctx, userIds)
+		wg.Done()
+	}()
+
+	go func() {
+		defer wg.Done()
+		// 对于 FollowerList 粉丝列表用户, 需要查询对应关系
+		if isFollower {
+			var reverseRelations []model.Relation
+			reverseRelations, QRelationsErr = model.QueryRelations(ctx, userId, userIds)
+			if QRelationsErr != nil {
+				return
+			}
+			for _, relation := range reverseRelations {
+				isFollowMap[relation.UserId] = relation.IsFollowing()
+			}
+		}
+	}()
+
+	wg.Wait()
+	// 处理异常错误
+	if QUsersErr != nil {
+		return nil, QUsersErr
+	}
+	if QRelationsErr != nil {
+		return nil, QRelationsErr
 	}
 
-	userList := make([]biz.User, len(users))
 	for i, user := range users {
 		userList[i] = biz.User{
 			Id:            int64(user.ID),
 			Name:          user.Username,
 			FollowCount:   user.FollowCount,
 			FollowerCount: user.FollowerCount,
-			IsFollow:      relations[i].IsFollowing(),
+			IsFollow:      isFollowMap[user.ID],
 		}
 	}
+
 	return userList, nil
 }
 
@@ -181,35 +230,63 @@ func (rs *relationServiceImpl) transToFriendUsers(ctx context.Context, relations
 		userMap[relation.UserId] = nil
 	}
 
-	users, err := model.QueryUsersByIds(ctx, userIds)
-	if err != nil {
-		return nil, err
+	// 并发控制
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// 并发查询
+	var QUserErr, QMessageErr error
+	var users []model.User
+	var messages []model.Message
+
+	go func() {
+		users, QUserErr = model.QueryUsersByIds(ctx, userIds)
+		wg.Done()
+	}()
+
+	go func() {
+		// 查询朋友第一条消息
+		messages, QMessageErr = model.QueryFriendMessages(ctx, userIds)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	// 处理异常错误
+	if QUserErr != nil {
+		return nil, QUserErr
+	}
+	if QMessageErr != nil {
+		return nil, QMessageErr
 	}
 
+	// 最后拼接
 	userList := make([]biz.FriendUser, len(users))
 	for i, user := range users {
 		userList[i] = biz.FriendUser{
+			// 朋友列表中必定是已关注用户, 直接设置 IsFollow 为 true
+			// 但不一定是互关用户, 可以存在对方已经取消关注
 			User: biz.User{
 				Id:            int64(user.ID),
 				Name:          user.Username,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
-				IsFollow:      relations[i].IsFollowing(),
+				IsFollow:      true,
 			},
 		}
 		userMap[user.ID] = &userList[i]
 	}
-
-	// 查询朋友第一条消息
-	messages, err := model.QueryFriendMessages(ctx, userIds)
+	// 设置消息
 	for _, message := range messages {
+		// message 不为零值, 即查询到记录
 		if message.ID != 0 {
+
 			var friendId uint
 			if message.ToUserId != uint(thisUserId) {
 				friendId = message.ToUserId
 			} else {
 				friendId = message.FromUserId
 			}
+
 			user, ok := userMap[friendId]
 			if ok {
 				user.Message = message.Content

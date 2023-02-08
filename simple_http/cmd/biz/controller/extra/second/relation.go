@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"simple-main/cmd/biz"
 	"simple-main/cmd/biz/service/extra/second"
+	"simple-main/cmd/configs"
 	"strconv"
 )
 
@@ -22,7 +23,8 @@ var relationService = second.RelationServiceImpl()
 // RelationAction
 // @router /douyin/relation/action [POST]
 func RelationAction(ctx context.Context, c *app.RequestContext) {
-	var req *second.RelationActionRequest
+	req := &second.RelationActionRequest{}
+
 	err := c.BindAndValidate(req)
 	if err != nil {
 		hlog.Error(err)
@@ -30,6 +32,11 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 		c.JSON(http.StatusBadRequest, resp)
 		return
 	}
+
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	userId := v.(*biz.User).Id
+	req.UserId = userId
 
 	resp := relationService.Action(ctx, req)
 	c.JSON(http.StatusOK, resp)

@@ -56,16 +56,33 @@ func (cs *commentServiceImpl) Action(ctx context.Context, req *CommentRequest) (
 	resp = &CommentResponse{}
 	switch req.ActionType {
 	case PublishComment:
-		cs.publishComment(ctx, req, resp)
+		{
+			newComment, err := cs.publishComment(ctx, req)
+			if err != nil {
+				hlog.Error(err)
+				resp.Response = *biz.NewErrorResponse(err)
+				return
+			}
+			resp.Response = *biz.NewSuccessResponse("评论成功")
+			resp.Comment = newComment
+		}
 	case RemoveComment:
-		cs.removeComment(ctx, req, resp)
+		{
+			if err := model.DeleteComment(ctx, req.CommentId); err != nil {
+				hlog.Error(err)
+				resp.Response = *biz.NewErrorResponse(err)
+				return
+			}
+
+			resp.Response = *biz.NewSuccessResponse("删除成功")
+		}
 	default:
-		resp.Response = *biz.NewFailureResponse("未知操作")
+		resp.Response = *biz.NewFailureResponse("非法操作")
 	}
 	return
 }
 
-func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId int64) (resp *CommentListResponse) {
+func (cs *commentServiceImpl) CommentList(ctx context.Context, thisUserId, videoId int64) (resp *CommentListResponse) {
 	resp = &CommentListResponse{}
 
 	comments, err := model.QueryComments(ctx, videoId)
@@ -76,17 +93,17 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId i
 		return
 	}
 
-	commentList := make([]biz.Comment, len(comments))
-
 	// 用于缓存 user 映射关系
-	var userMap = make(map[uint][]any)
+	var userMap = make(map[uint]*biz.User)
+	var isFollowMap = make(map[uint]bool)
 
+	// 初始化 map
 	for _, comment := range comments {
 		if _, found := userMap[comment.UserId]; !found {
-			userMap[comment.UserId] = []any{nil, false}
+			userMap[comment.UserId] = nil
+			isFollowMap[comment.UserId] = false
 		}
 	}
-
 	// 保存 userId
 	var userIds = make([]int64, 0, len(userMap))
 	for id := range userMap {
@@ -97,42 +114,58 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId i
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	var queryErr error
+	var QUserErr, QRelationErr error
 
 	go func() {
+		defer wg.Done()
+
 		users, err := model.QueryUsersByIds(ctx, userIds)
-		if queryErr != nil {
-			queryErr = err
-			wg.Done()
+		if QUserErr = err; QUserErr != nil {
 			return
 		}
 		for _, user := range users {
-			userMap[user.ID][0] = &user
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		for _, id := range userIds {
-			userMap[uint(id)][1] = true
-		}
-		wg.Done()
-	}()
-
-	wg.Wait()
-	// 最终转换
-	for i, comment := range comments {
-		user := userMap[comment.UserId][0].(*model.User)
-		isFollow := userMap[comment.UserId][1].(bool)
-		commentList[i] = biz.Comment{
-			Id: int64(comment.ID),
-			User: biz.User{
+			userMap[user.ID] = &biz.User{
 				Id:            int64(user.ID),
 				Name:          user.Username,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
-				IsFollow:      isFollow,
-			},
+			}
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		relations, err := model.QueryRelations(ctx, thisUserId, userIds)
+		if QRelationErr = err; QRelationErr != nil {
+			return
+		}
+		for _, relation := range relations {
+			isFollowMap[relation.UserId] = relation.IsFollowing()
+		}
+	}()
+
+	wg.Wait()
+
+	// 处理异常错误
+	if QUserErr != nil {
+		hlog.Error(QUserErr)
+		resp.Response = *biz.NewErrorResponse(QUserErr)
+	}
+	if QRelationErr != nil {
+
+		hlog.Error(QRelationErr)
+		resp.Response = *biz.NewErrorResponse(QRelationErr)
+	}
+
+	// 最终转换
+	commentList := make([]biz.Comment, len(comments))
+	for i, comment := range comments {
+		user := userMap[comment.UserId]
+		user.IsFollow = isFollowMap[comment.UserId]
+		commentList[i] = biz.Comment{
+			Id:         int64(comment.ID),
+			User:       *user,
 			Content:    comment.Content,
 			CreateDate: comment.CreatedAt.Format("01-02"),
 		}
@@ -143,7 +176,7 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, userId, videoId i
 	return
 }
 
-func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRequest, resp *CommentResponse) {
+func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRequest) (*biz.Comment, error) {
 	newComment := &model.Comment{
 		UserId:  uint(req.UserId),
 		VideoId: uint(req.VideoId),
@@ -157,54 +190,44 @@ func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRe
 	// 并发创建和查询
 	var createErr error
 	go func() {
+		defer wg.Done()
 		if createErr = model.CreateComment(ctx, newComment); createErr != nil {
-			hlog.Error(createErr)
+			return
 		}
-		wg.Done()
 	}()
 
 	var user biz.User
 	var queryErr error
 	go func() {
+		defer wg.Done()
 		var u *model.User
 		u, queryErr = model.QueryUserById(ctx, req.UserId)
 		if queryErr != nil {
-			hlog.Error(queryErr)
+			return
 		}
 		user = biz.User{
 			Id:            int64(u.ID),
 			Name:          u.Username,
 			FollowCount:   u.FollowCount,
 			FollowerCount: u.FollowerCount,
-			//IsFollow:      false,
+			IsFollow:      false, // 对于用户自己, IsFollow 实际上就是默认的 false
 		}
-		wg.Done()
 	}()
 
 	wg.Wait()
+
+	// 处理异常错误
 	if createErr != nil {
-		resp.Response = *biz.NewErrorResponse(createErr)
-		return
+		return nil, createErr
 	}
 	if queryErr != nil {
-		resp.Response = *biz.NewErrorResponse(queryErr)
-		return
+		return nil, queryErr
 	}
 
-	resp.Response = *biz.NewSuccessResponse("评论成功")
-	resp.Comment = &biz.Comment{
+	return &biz.Comment{
 		Id:         int64(newComment.ID),
 		User:       user,
 		Content:    newComment.Content,
 		CreateDate: newComment.CreatedAt.Format("01-02"),
-	}
-}
-func (cs *commentServiceImpl) removeComment(ctx context.Context, req *CommentRequest, resp *CommentResponse) {
-	if err := model.DeleteComment(ctx, req.CommentId); err != nil {
-		hlog.Error(err)
-		resp.Response = *biz.NewErrorResponse(err)
-		return
-	}
-
-	resp.Response = *biz.NewSuccessResponse("删除成功")
+	}, nil
 }

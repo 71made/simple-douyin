@@ -26,7 +26,7 @@ var jwtMiddleware *jwt.HertzJWTMiddleware
 func Init() {
 	jwtMiddleware, _ = jwt.New(&jwt.HertzJWTMiddleware{
 		Key:           []byte(configs.JWTSecretKey),
-		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
+		TokenLookup:   "header: Authorization, query: token, cookie: jwt, form: token",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
 		Timeout:       24 * time.Hour,

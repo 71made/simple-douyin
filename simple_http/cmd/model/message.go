@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"simple-main/cmd/common/db"
+	"simple-main/cmd/configs"
 	"strings"
 )
 
@@ -29,6 +30,10 @@ type Message struct {
 	FromUserId uint
 	ToUserId   uint
 	Content    string
+}
+
+func (m *Message) TableName() string {
+	return configs.MessageTable
 }
 
 func (m *Message) GetMsgType(userId uint) int {
@@ -86,8 +91,7 @@ func QueryFriendMessages(ctx context.Context, userIds []int64) ([]Message, error
 			Where("from_user_id = ?", id).
 			Or("to_user_id = ?", id).
 			Order("created_at DESC").
-			Limit(1).
-			Scan(&res[i])
+			Limit(1)
 		selects[i] = tx
 		sqlBuilder.WriteString("? UNION")
 	}
@@ -96,7 +100,7 @@ func QueryFriendMessages(ctx context.Context, userIds []int64) ([]Message, error
 		return res, nil
 	}
 	// 查询
-	if err := db.GetInstance().WithContext(ctx).Raw(sql, selects).Error; err != nil {
+	if err := db.GetInstance().WithContext(ctx).Raw(sql, selects).Scan(&res).Error; err != nil {
 		return nil, err
 	}
 

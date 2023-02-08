@@ -6,6 +6,7 @@ import (
 	"simple-main/cmd/biz"
 	"simple-main/cmd/configs"
 	"simple-main/cmd/model"
+	"sync"
 )
 
 /*
@@ -103,33 +104,31 @@ func (fs *favoriteServiceImpl) FavoriteList(ctx context.Context, userId int64) (
 }
 
 func GetBizFavoriteVideoList(ctx context.Context, videos []model.Video, userId int64) ([]biz.Video, error) {
-	// 构建转换实体
-	var videoList = make([]biz.Video, len(videos))
+
 	// 缓存 author
-	var authors = make(map[uint]biz.User)
-	// 缓存 video id 为后续查询关系做准备
-	var videoIds = make([]int64, len(videos))
+	var authors = make(map[uint]*biz.User)
+	// 保存 author id
+	var authorIds = make([]int64, 0)
+
 	// 保存 video id 与实体间的映射关系
 	var videoMap = make(map[uint]*biz.Video, len(videos))
+
+	// 保存关注情况
+	var isFollowMap = make(map[uint]bool)
+
+	// 构建转换实体
+	var videoList = make([]biz.Video, len(videos))
 	for i, video := range videos {
-		author, found := authors[video.AuthorId]
+		// 保存 authorIds 和初始化 authors、isFollowMap
+		_, found := authors[video.AuthorId]
 		if !found {
-			user, err := model.QueryUserById(ctx, int64(video.AuthorId))
-			if err != nil {
-				return nil, err
-			}
-			author = biz.User{
-				Id:            int64(video.AuthorId),
-				Name:          user.Username,
-				FollowCount:   user.FollowCount,
-				FollowerCount: user.FollowerCount,
-			}
-			authors[video.AuthorId] = author
+			authors[video.AuthorId] = nil
+			authorIds = append(authorIds, int64(video.AuthorId))
+			isFollowMap[video.AuthorId] = false
 		}
 
 		videoList[i] = biz.Video{
 			Id:            int64(video.ID),
-			Author:        author,
 			PlayUrl:       configs.ServerAddr + configs.VideoUriPrefix + video.PlayUri,
 			CoverUrl:      configs.ServerAddr + configs.CoverUriPrefix + video.CoverUri,
 			FavoriteCount: video.FavoriteCount,
@@ -138,11 +137,55 @@ func GetBizFavoriteVideoList(ctx context.Context, videos []model.Video, userId i
 
 		// 喜欢列表都为 true
 		videoList[i].IsFavorite = true
-		videoIds[i] = int64(video.ID)
 		videoMap[video.ID] = &videoList[i]
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	// 填充剩下参数
-	// 查询是否关注
-	//author.IsFollow = false
+	var QUserErr error
+	go func() {
+		defer wg.Done()
+		// 批量查询
+		users, err := model.QueryUsersByIds(ctx, authorIds)
+		if QUserErr = err; err != nil {
+			return
+		}
+		for _, user := range users {
+			author := &biz.User{
+				Id:            int64(user.ID),
+				Name:          user.Username,
+				FollowCount:   user.FollowCount,
+				FollowerCount: user.FollowerCount,
+			}
+			authors[user.ID] = author
+		}
+	}()
+
+	go func() {
+		// 查询是否关注
+		relations, _ := model.QueryRelations(ctx, userId, authorIds)
+
+		for _, relation := range relations {
+			isFollowMap[relation.UserId] = relation.IsFollowing()
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	// 处理异常错误
+	if QUserErr != nil {
+		return nil, QUserErr
+	}
+
+	// 最后组装
+	for i, video := range videos {
+		author := authors[video.AuthorId]
+		author.IsFollow = isFollowMap[video.AuthorId]
+		videoList[i].Author = *author
+	}
+
 	return videoList, nil
 }

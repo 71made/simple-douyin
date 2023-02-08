@@ -32,7 +32,7 @@ type Relation struct {
 	UserId       uint
 	FollowerId   uint
 	FollowType   uint `gorm:"column:is_following"` // 1-关注 2-取消关注
-	FriendStatus uint `gorm:"column:is_following"` // 1-朋友 2-不是朋友
+	FriendStatus uint `gorm:"column:is_friend"`    // 1-朋友 2-不是朋友
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -65,14 +65,14 @@ func (r *Relation) GetFriendStatus() uint {
 	return r.FriendStatus
 }
 
+func (r *Relation) BeforeSave(tx *gorm.DB) (err error) {
+	// 处理朋友关系
+	return r.updateFriendShip(tx)
+}
+
 // BeforeCreate
 // 通过 GORM 提供的 Hook 实现关联更新 user 记录的 follow_count 和 follower_count
 func (r *Relation) BeforeCreate(tx *gorm.DB) (err error) {
-	// 处理朋友关系
-	err = r.updateFriendShip(tx)
-	if err != nil {
-		return
-	}
 
 	// 更新关注数和粉丝数
 	followerExpr := gorm.Expr("follower_count + 1")
@@ -90,11 +90,6 @@ func (r *Relation) BeforeCreate(tx *gorm.DB) (err error) {
 // BeforeUpdate
 // 同理, 通过 Hook 实现关联更新 user 记录的 follow_count 和 follower_count
 func (r *Relation) BeforeUpdate(tx *gorm.DB) (err error) {
-	// 处理朋友关系
-	err = r.updateFriendShip(tx)
-	if err != nil {
-		return
-	}
 
 	// 更新关注数和粉丝数
 	var followerExpr, followExpr clause.Expr
@@ -122,11 +117,11 @@ func (r *Relation) updateFriendShip(tx *gorm.DB) (err error) {
 	}
 	if r.IsFollowing() {
 		// 对于关注操作, 尝试更新 互关用户的 relation
-		updateRes := tx.Model(r.TableName()).
+		updateRes := tx.Table(r.TableName()).
 			Where("user_id = ?", r.FollowerId).
 			Where("follower_id = ?", r.UserId).
 			Where("is_following = ?", Following).
-			Update("is_friend = ?", IsFriend)
+			Update("is_friend", IsFriend)
 
 		if updateRes.Error != nil {
 			err = updateRes.Error
@@ -135,12 +130,14 @@ func (r *Relation) updateFriendShip(tx *gorm.DB) (err error) {
 		if updateRes.RowsAffected == 0 {
 			// 没有匹配记录则设置 NotFriend
 			r.FriendStatus = NotFriend
+			tx.Statement.SetColumn("is_friend", NotFriend)
 		} else if updateRes.RowsAffected == 1 {
 			// 有匹配记录或者修改成功则设置为 IsFriend
 			// 对于 MySQL 此处需要保证数据库连接 DSN 中配置了 clientFoundRows 为 true
 			// 因为 MySQL 连接驱动默认只返回影响行数, 不会返回匹配行数
 			// 详细参考: https://my.oschina.net/zdtdtel/blog/5321128
 			r.FriendStatus = IsFriend
+			tx.Statement.SetColumn("is_friend", IsFriend)
 		} else {
 			// 做兜底处理
 			return errors.New("user_video table records is dirty")
@@ -150,6 +147,7 @@ func (r *Relation) updateFriendShip(tx *gorm.DB) (err error) {
 		// 实际上, 正常流程在调用取消关注接口时, service 层会设置 FriendStatus 为 NotFriend
 		// 并在此函数开始被直接返回, 这里做兜底处理, 处理 FriendStatus 零值时的情况
 		r.FriendStatus = NotFriend
+		tx.Statement.SetColumn("is_friend", NotFriend)
 	}
 	return
 }
@@ -188,7 +186,10 @@ func UpdateRelation(ctx context.Context, r *Relation) error {
 	err := db.GetInstance().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		updateRes := tx.Model(r).
 			Where("user_id", r.UserId).Where("follower_id", r.FollowerId).
-			Update("is_following", r.FollowType)
+			Updates(Relation{
+				FollowType:   r.GetFollowType(),
+				FriendStatus: r.GetFriendStatus(),
+			})
 
 		if updateRes.Error != nil {
 			return updateRes.Error
@@ -209,7 +210,7 @@ func UpdateRelation(ctx context.Context, r *Relation) error {
 func QueryRelation(ctx context.Context, userId, toUserId int64) (*Relation, error) {
 	res := make([]Relation, 0)
 	if err := db.GetInstance().WithContext(ctx).
-		Where("userId = ?", toUserId).
+		Where("user_id = ?", toUserId).
 		Where("follower_id = ?", userId).
 		Find(&res).Error; err != nil {
 		return nil, err
@@ -218,6 +219,18 @@ func QueryRelation(ctx context.Context, userId, toUserId int64) (*Relation, erro
 		return nil, nil
 	}
 	return &res[0], nil
+}
+
+func QueryRelations(ctx context.Context, userId int64, toUserIds []int64) ([]Relation, error) {
+	res := make([]Relation, 0)
+	if err := db.GetInstance().WithContext(ctx).
+		Where("user_id in ?", toUserIds).
+		Where("follower_id = ?", userId).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func QueryFollowRelations(ctx context.Context, userId int64) ([]Relation, error) {

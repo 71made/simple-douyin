@@ -43,6 +43,9 @@ func QueryUsers(ctx context.Context, username string) ([]User, error) {
 // 通过 ids 查询 model.User, 并按传入 ids 序列进行排序
 func QueryUsersByIds(ctx context.Context, userIds []int64) ([]User, error) {
 	res := make([]User, 0)
+	if len(userIds) == 0 {
+		return res, nil
+	}
 	// 构造排序条件
 	str := strings.ReplaceAll(fmt.Sprintf("%v", userIds), " ", ",")
 	// 截取中间 id 序列

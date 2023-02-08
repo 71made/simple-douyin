@@ -14,5 +14,6 @@ const (
 	VideoTable    = "user_video"
 	FavoriteTable = "favorite"
 	CommentTable  = "video_comment"
+	MessageTable  = "message"
 	RelationTable = "user_relation"
 )

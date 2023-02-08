@@ -30,8 +30,8 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		hlog.Errorf(fmt.Sprintf("msg : %s\n error: %v", "user_id 类型转换错误", err))
 		c.JSON(http.StatusBadRequest, resp)
 	}
-	token := c.Query("token")
-	hlog.Info("token: ", token)
+	//token := c.Query("token")
+	//hlog.Info("token: ", token)
 
 	resp := userService.UserInfo(ctx, userId)
 	c.JSON(http.StatusOK, resp)

@@ -46,7 +46,7 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 		ctx,
 		&core.VideoPublishRequest{
 			VideoFinalName: finalName,
-			UserId:         1,
+			UserId:         userId,
 			Title:          title,
 		},
 		// 并发实现服务器保存和上传 MinIO
