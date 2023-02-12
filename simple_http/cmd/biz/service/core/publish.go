@@ -10,10 +10,10 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/common/minio"
-	"simple-main/cmd/configs"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/common/minio"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"strings"
 )
 
@@ -129,7 +129,7 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 
 	}
 	hlog.Info(fmt.Sprintf("video path: %s, cover path: %s",
-		configs.ServerAddr+configs.VideoUriPrefix+newVideo.PlayUri, configs.ServerAddr+configs.CoverUriPrefix+newVideo.CoverUri))
+		configs.ServerAddr+configs.VideoURIPrefix+newVideo.PlayUri, configs.ServerAddr+configs.CoverURIPrefix+newVideo.CoverUri))
 	resp = biz.NewSuccessResponse("投稿成功")
 
 	// 删除服务器缓存

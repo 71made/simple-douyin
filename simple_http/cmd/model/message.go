@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"gorm.io/gorm"
-	"simple-main/cmd/common/db"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/common/db"
+	"simple-main/simple-http/cmd/configs"
 	"strings"
 )
 
@@ -72,8 +72,9 @@ func DeleteMessage(ctx context.Context, messageId, userId int64) error {
 func QueryMessages(ctx context.Context, fromId, toId int64) ([]Message, error) {
 	res := make([]Message, 0)
 	if err := db.GetInstance().WithContext(ctx).
-		Where("(from_user_id = ? and to_user_id = ?)", fromId, toId).
-		Or("(to_user_id = ? and from_user_id = ?)", fromId, toId).
+		Where("from_user_id = ? and to_user_id = ?", fromId, toId).
+		Or("to_user_id = ? and from_user_id = ?", fromId, toId).
+		Order("created_at ASC").
 		Find(&res).Error; err != nil {
 		return nil, err
 	}

@@ -3,9 +3,9 @@ package core
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/configs"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"sync"
 	"time"
 )
@@ -69,9 +69,6 @@ func (fs *feedServiceImpl) GetFeed(ctx context.Context, lastTime time.Time, user
 	return
 }
 
-// NotLoginUserId 定义未登陆用户 id 为 -1
-const NotLoginUserId = -1
-
 // GetBizVideoList
 // 类型转换 []model.Video -> []biz.Video, 用户未登陆时, userId 传递 NotLoginUserId
 func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([]biz.Video, error) {
@@ -103,8 +100,8 @@ func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([
 		// 构造 video
 		videoList[i] = biz.Video{
 			Id:            int64(video.ID),
-			PlayUrl:       configs.ServerAddr + configs.VideoUriPrefix + video.PlayUri,
-			CoverUrl:      configs.ServerAddr + configs.CoverUriPrefix + video.CoverUri,
+			PlayURL:       configs.ServerAddr + configs.VideoURIPrefix + video.PlayUri,
+			CoverURL:      configs.ServerAddr + configs.CoverURIPrefix + video.CoverUri,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
 		}
@@ -117,7 +114,7 @@ func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([
 	wg.Add(1) // 后续查询 authors 实体的并发任务
 
 	// 对于已登陆用户, 需要查询用户对应的关注和点赞情况
-	if userId != NotLoginUserId {
+	if userId != biz.NotLoginUserId {
 		wg.Add(2) // 接下来查询关注和点赞的并发任务
 
 		go func() {
@@ -155,6 +152,7 @@ func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([
 			author := &biz.User{
 				Id:            int64(user.ID),
 				Name:          user.Username,
+				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
 			}

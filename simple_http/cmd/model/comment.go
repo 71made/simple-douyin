@@ -5,8 +5,8 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"simple-main/cmd/common/db"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/common/db"
+	"simple-main/simple-http/cmd/configs"
 )
 
 /*
@@ -79,6 +79,7 @@ func QueryComments(ctx context.Context, videoId int64) ([]Comment, error) {
 	res := make([]Comment, 0)
 	if err := db.GetInstance().WithContext(ctx).
 		Where("video_id = ?", videoId).
+		Order("created_at DESC").
 		Find(&res).Error; err != nil {
 		return nil, err
 	}

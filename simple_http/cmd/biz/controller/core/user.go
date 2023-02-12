@@ -6,9 +6,10 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/service/core"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/service/core"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"strconv"
 )
 
@@ -30,10 +31,17 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		hlog.Errorf(fmt.Sprintf("msg : %s\n error: %v", "user_id 类型转换错误", err))
 		c.JSON(http.StatusBadRequest, resp)
 	}
-	//token := c.Query("token")
-	//hlog.Info("token: ", token)
 
-	resp := userService.UserInfo(ctx, userId)
+	var thisUserId int64
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	if v != nil {
+		thisUserId = v.(*biz.User).Id
+	} else {
+		thisUserId = biz.NotLoginUserId
+	}
+
+	resp := userService.UserInfo(ctx, userId, thisUserId)
 	c.JSON(http.StatusOK, resp)
 }
 

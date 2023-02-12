@@ -3,8 +3,9 @@ package first
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"sync"
 )
 
@@ -73,7 +74,6 @@ func (cs *commentServiceImpl) Action(ctx context.Context, req *CommentRequest) (
 				resp.Response = *biz.NewErrorResponse(err)
 				return
 			}
-
 			resp.Response = *biz.NewSuccessResponse("删除成功")
 		}
 	default:
@@ -127,6 +127,7 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, thisUserId, video
 			userMap[user.ID] = &biz.User{
 				Id:            int64(user.ID),
 				Name:          user.Username,
+				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
 			}
@@ -135,7 +136,10 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, thisUserId, video
 
 	go func() {
 		defer wg.Done()
-
+		// 未登陆用户关注关系默认为 false, 直接返回即可
+		if thisUserId == biz.NotLoginUserId {
+			return
+		}
 		relations, err := model.QueryRelations(ctx, thisUserId, userIds)
 		if QRelationErr = err; QRelationErr != nil {
 			return
@@ -151,11 +155,12 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, thisUserId, video
 	if QUserErr != nil {
 		hlog.Error(QUserErr)
 		resp.Response = *biz.NewErrorResponse(QUserErr)
+		return
 	}
 	if QRelationErr != nil {
-
 		hlog.Error(QRelationErr)
 		resp.Response = *biz.NewErrorResponse(QRelationErr)
+		return
 	}
 
 	// 最终转换
@@ -208,6 +213,7 @@ func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRe
 		user = biz.User{
 			Id:            int64(u.ID),
 			Name:          u.Username,
+			AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + u.Avatar,
 			FollowCount:   u.FollowCount,
 			FollowerCount: u.FollowerCount,
 			IsFollow:      false, // 对于用户自己, IsFollow 实际上就是默认的 false

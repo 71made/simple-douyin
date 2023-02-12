@@ -1,4 +1,4 @@
-module simple-main
+module simple-main/simple-http
 
 go 1.19
 

@@ -6,9 +6,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/service/extra/first"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/service/extra/first"
+	"simple-main/simple-http/cmd/configs"
 	"strconv"
 )
 
@@ -73,9 +73,14 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	var userId int64
 	// 获取 JWT 回设的 userId
 	v, _ := c.Get(configs.IdentityKey)
-	userId := v.(*biz.User).Id
+	if v != nil {
+		userId = v.(*biz.User).Id
+	} else {
+		userId = biz.NotLoginUserId
+	}
 
 	resp := commentServiceImpl.CommentList(ctx, userId, videoId)
 	c.JSON(http.StatusOK, resp)

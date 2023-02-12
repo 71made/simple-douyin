@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"simple-main/cmd/common/db"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/common/db"
+	"simple-main/simple-http/cmd/configs"
 	"strings"
 )
 
@@ -21,6 +21,7 @@ type User struct {
 	gorm.Model
 	Username      string
 	Password      string
+	Avatar        string
 	FollowCount   int64
 	FollowerCount int64
 }

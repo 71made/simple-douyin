@@ -5,11 +5,11 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/controller/core"
-	"simple-main/cmd/biz/controller/extra/first"
-	"simple-main/cmd/biz/controller/extra/second"
-	"simple-main/cmd/common/jwt"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/controller/core"
+	"simple-main/simple-http/cmd/biz/controller/extra/first"
+	"simple-main/simple-http/cmd/biz/controller/extra/second"
+	"simple-main/simple-http/cmd/common/jwt"
 	"strings"
 )
 
@@ -49,13 +49,31 @@ func Register(r *server.Hertz) {
 		// 获取视频列表
 		_publish.GET("/list/", core.PublishList)
 
-		_favorite := root.Group("/favorite", jwt.GetInstance().MiddlewareFunc())
+		_favorite := root.Group("/favorite", func(ctx context.Context, c *app.RequestContext) {
+			// 对于 /list/  接口, 在用户未登陆时也可以请求查看其他用户的喜欢视频列表
+			// 所以如果传入了 token, 此处需要手动调用 JWT 的 mw 校验和解析 token
+			// 但对于 /action/ 是需要校验和解析 token 的
+			reqURI := c.GetRequest().URI().String()
+			if token := c.Query("token"); len(token) != 0 ||
+				strings.Contains(reqURI, "/action/") {
+				jwt.GetInstance().MiddlewareFunc()(ctx, c)
+			}
+		})
 		// 视频点赞/取消点赞
 		_favorite.POST("/action/", first.FavoriteAction)
 		// 喜欢视频列表
 		_favorite.GET("/list/", first.GetFavoriteList)
 
-		_comment := root.Group("/comment", jwt.GetInstance().MiddlewareFunc())
+		_comment := root.Group("/comment", func(ctx context.Context, c *app.RequestContext) {
+			// 对于 /list/  接口, 在用户未登陆时也可以请求查看视频的评论列表
+			// 所以如果传入了 token, 此处需要手动调用 JWT 的 mw 校验和解析 token
+			// 但对于 /action/ 是需要校验和解析 token 的
+			reqURI := c.GetRequest().URI().String()
+			if token := c.Query("token"); len(token) != 0 ||
+				strings.Contains(reqURI, "/action/") {
+				jwt.GetInstance().MiddlewareFunc()(ctx, c)
+			}
+		})
 		// 发表评论
 		_comment.POST("/action/", first.CommentAction)
 		// 评论列表

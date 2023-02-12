@@ -5,10 +5,10 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/hertz-contrib/jwt"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/controller/core"
-	core2 "simple-main/cmd/biz/service/core"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/controller/core"
+	service "simple-main/simple-http/cmd/biz/service/core"
+	"simple-main/simple-http/cmd/configs"
 	"sync"
 	"time"
 )
@@ -49,7 +49,7 @@ func Init() {
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
 			core.UserLogin(ctx, c)
 			resp, found := c.Get("resp")
-			loginResp := resp.(*core2.UserLoginResponse)
+			loginResp := resp.(*service.UserLoginResponse)
 			if found && loginResp.StatusCode == 0 {
 				return loginResp.UserId, nil
 			}
@@ -62,7 +62,7 @@ func Init() {
 			}
 
 			resp, found := c.Get("resp")
-			loginResp := resp.(*core2.UserLoginResponse)
+			loginResp := resp.(*service.UserLoginResponse)
 			if found && loginResp.StatusCode == 0 {
 				loginResp.Token = token
 			}

@@ -3,8 +3,9 @@ package second
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"sync"
 )
 
@@ -33,8 +34,8 @@ type RelationFriendListResponse struct {
 
 type RelationService interface {
 	Action(ctx context.Context, req *RelationActionRequest) (resp *biz.Response)
-	FollowList(ctx context.Context, userId int64) (resp *RelationListResponse)
-	FollowerList(ctx context.Context, userId int64) (resp *RelationListResponse)
+	FollowList(ctx context.Context, userId, thisUserId int64) (resp *RelationListResponse)
+	FollowerList(ctx context.Context, userId, thisUserId int64) (resp *RelationListResponse)
 	FriendList(ctx context.Context, userId int64) (resp *RelationFriendListResponse)
 }
 
@@ -90,7 +91,7 @@ func (rs *relationServiceImpl) Action(ctx context.Context, req *RelationActionRe
 	return
 }
 
-func (rs *relationServiceImpl) FollowList(ctx context.Context, userId int64) (resp *RelationListResponse) {
+func (rs *relationServiceImpl) FollowList(ctx context.Context, userId, thisUserId int64) (resp *RelationListResponse) {
 	resp = &RelationListResponse{}
 
 	relations, err := model.QueryFollowRelations(ctx, userId)
@@ -100,7 +101,9 @@ func (rs *relationServiceImpl) FollowList(ctx context.Context, userId int64) (re
 		return
 	}
 
-	userList, err := rs.transToUsers(ctx, relations, userId, false)
+	// 是否是 thisUser 的 follow list
+	isFollow := userId == thisUserId
+	userList, err := rs.transToUsers(ctx, relations, thisUserId, isFollow)
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -112,7 +115,7 @@ func (rs *relationServiceImpl) FollowList(ctx context.Context, userId int64) (re
 	return
 }
 
-func (rs *relationServiceImpl) FollowerList(ctx context.Context, userId int64) (resp *RelationListResponse) {
+func (rs *relationServiceImpl) FollowerList(ctx context.Context, userId, thisUserId int64) (resp *RelationListResponse) {
 	resp = &RelationListResponse{}
 
 	relations, err := model.QueryFollowerRelations(ctx, userId)
@@ -122,7 +125,7 @@ func (rs *relationServiceImpl) FollowerList(ctx context.Context, userId int64) (
 		return
 	}
 
-	userList, err := rs.transToUsers(ctx, relations, userId, true)
+	userList, err := rs.transToUsers(ctx, relations, thisUserId, false)
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -156,17 +159,23 @@ func (rs *relationServiceImpl) FriendList(ctx context.Context, userId int64) (re
 	return
 }
 
-func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []model.Relation, userId int64, isFollower bool) ([]biz.User, error) {
+func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []model.Relation, thisUserId int64, isFollow bool) ([]biz.User, error) {
+	if len(relations) == 0 {
+		return make([]biz.User, 0), nil
+	}
 	userIds := make([]int64, len(relations))
+
 	// 用于缓存 isFollow 映射关系
 	var isFollowMap = make(map[uint]bool, len(relations))
 	for i, relation := range relations {
-		if isFollower {
-			userIds[i] = int64(relation.FollowerId)
-			isFollowMap[relation.FollowerId] = false
-		} else {
+		// 对于 thisUser 自己的关注列表, isFollow 直接为 true
+		if isFollow {
 			userIds[i] = int64(relation.UserId)
 			isFollowMap[relation.UserId] = true
+		} else {
+			userIds[i] = int64(relation.FollowerId)
+			isFollowMap[relation.FollowerId] = false
+
 		}
 	}
 
@@ -187,10 +196,10 @@ func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []mod
 
 	go func() {
 		defer wg.Done()
-		// 对于 FollowerList 粉丝列表用户, 需要查询对应关系
-		if isFollower {
+		// 对于非 thisUser 关注列表, 需要查询对应关系
+		if !isFollow && thisUserId != biz.NotLoginUserId {
 			var reverseRelations []model.Relation
-			reverseRelations, QRelationsErr = model.QueryRelations(ctx, userId, userIds)
+			reverseRelations, QRelationsErr = model.QueryRelations(ctx, thisUserId, userIds)
 			if QRelationsErr != nil {
 				return
 			}
@@ -213,6 +222,7 @@ func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []mod
 		userList[i] = biz.User{
 			Id:            int64(user.ID),
 			Name:          user.Username,
+			AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 			FollowCount:   user.FollowCount,
 			FollowerCount: user.FollowerCount,
 			IsFollow:      isFollowMap[user.ID],
@@ -268,6 +278,7 @@ func (rs *relationServiceImpl) transToFriendUsers(ctx context.Context, relations
 			User: biz.User{
 				Id:            int64(user.ID),
 				Name:          user.Username,
+				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
 				IsFollow:      true,

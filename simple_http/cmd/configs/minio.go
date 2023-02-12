@@ -18,12 +18,15 @@ const (
 	BucketName = "douyin"
 	Video      = "/video/"
 	Cover      = "/cover/"
+	Avatar     = "/avatar/"
 )
 
 const ServerAddr = "http://192.168.0.107:9000" // 项目本地测试图床 IP 地址
 
 const (
-	VideoUriPrefix = "/" + BucketName + Video // 视频路径 uri 前缀
-	CoverUriPrefix = "/" + BucketName + Cover // 视频封面路径 uri 前缀
-	EmptyCoverName = "empty_cover.jpeg"
+	VideoURIPrefix  = "/" + BucketName + Video // 视频路径 uri 前缀
+	CoverURIPrefix  = "/" + BucketName + Cover // 视频封面路径 uri 前缀
+	AvatarURIPrefix = "/" + BucketName + Avatar
+	EmptyCoverName  = "empty_cover.jpeg"
+	EmptyAvatarName = "empty_avatar.jpeg"
 )

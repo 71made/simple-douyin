@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/service/core"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/service/core"
+	"simple-main/simple-http/cmd/configs"
 	"sync"
 )
 

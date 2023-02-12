@@ -3,9 +3,9 @@ package first
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/configs"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"sync"
 )
 
@@ -17,9 +17,9 @@ import (
 */
 
 type FavoriteRequest struct {
-	UserId     int64 `json:"user_id"`
-	VideoId    int64 `json:"video_id"`
-	ActionType uint  `json:"action_type"`
+	UserId     int64 `query:"user_id"`
+	VideoId    int64 `query:"video_id,required"`
+	ActionType uint  `query:"action_type,required"`
 }
 
 type FavoriteListResponse struct {
@@ -129,8 +129,8 @@ func GetBizFavoriteVideoList(ctx context.Context, videos []model.Video, userId i
 
 		videoList[i] = biz.Video{
 			Id:            int64(video.ID),
-			PlayUrl:       configs.ServerAddr + configs.VideoUriPrefix + video.PlayUri,
-			CoverUrl:      configs.ServerAddr + configs.CoverUriPrefix + video.CoverUri,
+			PlayURL:       configs.ServerAddr + configs.VideoURIPrefix + video.PlayUri,
+			CoverURL:      configs.ServerAddr + configs.CoverURIPrefix + video.CoverUri,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
 		}
@@ -156,6 +156,7 @@ func GetBizFavoriteVideoList(ctx context.Context, videos []model.Video, userId i
 			author := &biz.User{
 				Id:            int64(user.ID),
 				Name:          user.Username,
+				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
 			}

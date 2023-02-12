@@ -5,8 +5,8 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"simple-main/cmd/common/db"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/common/db"
+	"simple-main/simple-http/cmd/configs"
 	"time"
 )
 
@@ -207,6 +207,8 @@ func UpdateRelation(ctx context.Context, r *Relation) error {
 	return err
 }
 
+// QueryRelation
+// 查询 userId 对于 toUserId 的关注关系, 即 userId 是否关注了 toUserId
 func QueryRelation(ctx context.Context, userId, toUserId int64) (*Relation, error) {
 	res := make([]Relation, 0)
 	if err := db.GetInstance().WithContext(ctx).

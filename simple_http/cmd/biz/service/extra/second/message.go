@@ -3,8 +3,8 @@ package second
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/model"
 )
 
 /*
@@ -79,6 +79,7 @@ func (ms *messageServiceImpl) Chat(ctx context.Context, fromUserId, toUserId int
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
+		return
 	}
 
 	// 转换
@@ -86,12 +87,13 @@ func (ms *messageServiceImpl) Chat(ctx context.Context, fromUserId, toUserId int
 	for i, message := range messages {
 		messageList[i] = biz.Message{
 			Id:         int64(message.ID),
-			FromUSerId: int64(message.FromUserId),
+			FromUserId: int64(message.FromUserId),
 			ToUserId:   int64(message.ToUserId),
 			Content:    message.Content,
-			CreateTime: message.CreatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime: message.CreatedAt.Unix(),
 		}
 	}
 	resp.Response = *biz.NewSuccessResponse("获取成功")
+	resp.MessageList = messageList
 	return
 }

@@ -19,6 +19,7 @@ CREATE TABLE `user_video`
     `author_id`      bigint unsigned NOT NULL COMMENT 'Author id',
     `play_uri`       varchar(128) NOT NULL DEFAULT '' COMMENT 'Video resource uri',
     `cover_uri`      varchar(128) NOT NULL DEFAULT '' COMMENT 'Video cover image uri',
+    `avatar`		 varchar(128) NOT NULL DEFAULT '' COMMENT 'User avatar',
     `favorite_count` bigint NOT NULL DEFAULT 0 COMMENT 'Video favorite count',
     `comment_count`  bigint NOT NULL DEFAULT 0 COMMENT 'Video comment count',
     `title`          varchar(128) NOT NULL DEFAULT '' COMMENT 'Video title',

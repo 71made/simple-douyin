@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/service/core"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/service/core"
+	"simple-main/simple-http/cmd/configs"
 	"strconv"
 	"time"
 )
@@ -26,10 +26,10 @@ func Feed(ctx context.Context, c *app.RequestContext) {
 	// 获取 JWT 回设的 userId
 	v, _ := c.Get(configs.IdentityKey)
 	var userId int64
-	if v == nil {
-		userId = core.NotLoginUserId
-	} else {
+	if v != nil {
 		userId = v.(*biz.User).Id
+	} else {
+		userId = biz.NotLoginUserId
 	}
 
 	lastTime, _ := strconv.ParseInt(c.Query("last_time"), 10, 64)

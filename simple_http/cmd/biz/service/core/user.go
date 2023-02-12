@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"io"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/model"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/cmd/model"
 	"strings"
 )
 
@@ -32,7 +34,7 @@ type UserLoginResponse struct {
 type UserService interface {
 	Register(ctx context.Context, user *model.User) (resp *UserLoginResponse)
 	Login(ctx context.Context, username string, password string) (resp *UserLoginResponse)
-	UserInfo(ctx context.Context, userId int64) (resp *UserResponse)
+	UserInfo(ctx context.Context, userId, thisUserId int64) (resp *UserResponse)
 }
 
 func GetUserServiceImpl() UserService {
@@ -66,6 +68,11 @@ func (us *userServiceImpl) Register(ctx context.Context, user *model.User) (resp
 	if flag {
 		resp.Response = *biz.NewFailureResponse("该用户名已被使用")
 		return
+	}
+
+	// 设置默认头像
+	if len(user.Avatar) == 0 {
+		user.Avatar = configs.EmptyAvatarName
 	}
 
 	if err := model.CreateUser(ctx, user); err != nil {
@@ -113,10 +120,11 @@ func (us *userServiceImpl) Login(ctx context.Context, username string, password 
 	return
 }
 
-func (us *userServiceImpl) UserInfo(ctx context.Context, userId int64) (resp *UserResponse) {
+func (us *userServiceImpl) UserInfo(ctx context.Context, userId, thisUserId int64) (resp *UserResponse) {
 	resp = &UserResponse{}
 	user, err := model.QueryUserById(ctx, userId)
 	if err != nil {
+		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
 		return
 	}
@@ -126,12 +134,28 @@ func (us *userServiceImpl) UserInfo(ctx context.Context, userId int64) (resp *Us
 		return
 	}
 
+	// 查询是否关注
+	var isFollow bool
+	if thisUserId != biz.NotLoginUserId {
+		relation, err := model.QueryRelation(ctx, thisUserId, userId)
+		if err != nil {
+			hlog.Error(err)
+			resp.Response = *biz.NewErrorResponse(err)
+			return
+		}
+		if relation != nil {
+			isFollow = relation.IsFollowing()
+		}
+	}
+
 	resp.Response = *biz.NewSuccessResponse("获取用户信息成功")
 	resp.User = &biz.User{
 		Id:            userId,
 		Name:          user.Username,
+		AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 		FollowCount:   user.FollowCount,
 		FollowerCount: user.FollowerCount,
+		IsFollow:      isFollow,
 	}
 	return
 }

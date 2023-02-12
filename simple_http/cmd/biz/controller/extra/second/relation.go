@@ -2,12 +2,13 @@ package second
 
 import (
 	"context"
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/service/extra/second"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/service/extra/second"
+	"simple-main/simple-http/cmd/configs"
 	"strconv"
 )
 
@@ -28,8 +29,7 @@ func RelationAction(ctx context.Context, c *app.RequestContext) {
 	err := c.BindAndValidate(req)
 	if err != nil {
 		hlog.Error(err)
-		resp := biz.NewFailureResponse("参数绑定错误")
-		c.JSON(http.StatusBadRequest, resp)
+		c.JSON(http.StatusBadRequest, biz.NewErrorResponse(fmt.Errorf("参数绑定错误")))
 		return
 	}
 
@@ -54,7 +54,16 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := relationService.FollowerList(ctx, userId)
+	var thisUserId int64
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	if v != nil {
+		thisUserId = v.(*biz.User).Id
+	} else {
+		thisUserId = biz.NotLoginUserId
+	}
+
+	resp := relationService.FollowerList(ctx, userId, thisUserId)
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -70,7 +79,16 @@ func GetFollowList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := relationService.FollowList(ctx, userId)
+	var thisUserId int64
+	// 获取 JWT 回设的 userId
+	v, _ := c.Get(configs.IdentityKey)
+	if v != nil {
+		thisUserId = v.(*biz.User).Id
+	} else {
+		thisUserId = biz.NotLoginUserId
+	}
+
+	resp := relationService.FollowList(ctx, userId, thisUserId)
 	c.JSON(http.StatusOK, resp)
 }
 

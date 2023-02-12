@@ -5,9 +5,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
-	"simple-main/cmd/biz"
-	"simple-main/cmd/biz/service/extra/second"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/biz"
+	"simple-main/simple-http/cmd/biz/service/extra/second"
+	"simple-main/simple-http/cmd/configs"
 	"strconv"
 )
 
@@ -45,7 +45,7 @@ func MessageChat(ctx context.Context, c *app.RequestContext) {
 func MessageAction(ctx context.Context, c *app.RequestContext) {
 
 	req := &second.MessageRequest{}
-	err := c.BindAndValidate(&req)
+	err := c.BindAndValidate(req)
 	if err != nil {
 		hlog.Error(err)
 		resp := biz.NewFailureResponse("参数绑定失败")

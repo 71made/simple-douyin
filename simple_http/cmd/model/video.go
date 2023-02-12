@@ -3,8 +3,8 @@ package model
 import (
 	"context"
 	"gorm.io/gorm"
-	"simple-main/cmd/common/db"
-	"simple-main/cmd/configs"
+	"simple-main/simple-http/cmd/common/db"
+	"simple-main/simple-http/cmd/configs"
 )
 
 /*

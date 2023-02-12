@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/hertz-contrib/obs-opentelemetry/tracing"
-	"simple-main/cmd/common"
+	"simple-main/simple-http/cmd/common"
 )
 
 /*
