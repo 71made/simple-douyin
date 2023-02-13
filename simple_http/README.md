@@ -22,9 +22,17 @@
 
 **MinIO**：
 
-- [下载地址](http://www.minio.io)，找教程自建即可 ([国内网址](http://www.minio.org.cn/download.shtml#/kubernetes))。
+- [下载地址](http://www.minio.io)，找教程自建即可（[国内网址](http://www.minio.org.cn/download.shtml#/kubernetes)）。
 
-- 相关配置 (包括运行地址、用户名和密码等) 在 pkg/configs/minio.go 中。
+- 相关配置 （包括运行地址、用户名和密码等）在 pkg/configs/minio.go 中。
+  注：使用自建的 MinIO 服务，除基本的用户名、密码等参数配置，还需要修改 ServerAddr 配置：
+
+  ```go
+  package configs
+  const ServerAddr = "http://192.168.0.107:9000"
+  ```
+
+  修改为运行 MinIO 服务的主机网络 IP 和设定的端口，并且保证 App 端可以通过网络访问到该服务地址（同局域网环境下或公网环境）。
 
 - 需要手动创建桶 (名称为 douyin)，并设置访问权限：
 
@@ -37,7 +45,7 @@
 - [下载地址](https://www.docker.com)。
 - 容器中暂时只运行了 MySQL，可以不安装，直接使用本地 MySQL 服务即可。
 
-注：上述依赖服务也可以直接使用我个人公网环境 (服务器) 上的，需要修改 MySQL DNS 配置：
+注：上述依赖服务也可以直接使用我个人公网环境（服务器） 上的，需要修改 MySQL DNS 配置：
 ```go
 package configs
 const MySQLDataBaseDSN = "lortee:^LuoYi0813@tcp(rm-bp14n02e97n12gio0so.mysql.rds.aliyuncs.com:3306)/douyin?charset=utf8&parseTime=True&loc=Local&clientFoundRows=true"
@@ -63,3 +71,18 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o simple-http-mac main.go
 # 打包 windows 程序 
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o simple-http-windows.exe main.go
 ```
+
+## 运行
+
+直接执行打包程序：
+
+```shell
+cd simple_http/cmd
+./simple-http-linux
+# ./simple-http-mac
+# ./simple-http-windows.exe
+```
+
+保证手机或模拟器在同一局域网中，安装并配置 App 端 BaseUrl 地址为 http://本机网络 IP + 端口 (:8080) 地址即可；也可以使用已经部署在个人服务器上的项目， BaseUrl 地址为 http://114.55.42.185:8080。
+
+最新版 App 在[使用文档](https://bytedance.feishu.cn/docs/doccnM9KkBAdyDhg8qaeGlIz7S7)中获取。
