@@ -8,7 +8,7 @@ import (
 	"simple-main/simple-http/cmd/biz"
 	"simple-main/simple-http/cmd/biz/controller/core"
 	service "simple-main/simple-http/cmd/biz/service/core"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/configs"
 	"sync"
 	"time"
 )

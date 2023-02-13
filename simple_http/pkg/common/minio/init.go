@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/configs"
 )
 
 /*

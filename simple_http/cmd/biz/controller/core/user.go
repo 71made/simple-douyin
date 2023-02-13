@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"simple-main/simple-http/cmd/biz"
 	"simple-main/simple-http/cmd/biz/service/core"
-	"simple-main/simple-http/cmd/configs"
 	"simple-main/simple-http/cmd/model"
+	"simple-main/simple-http/pkg/configs"
 	"strconv"
 )
 
@@ -20,7 +20,7 @@ import (
  @Description: 用户相关服务接口处理的 controller
 */
 
-var userService = core.GetUserServiceImpl()
+var userService = core.UserServiceImpl()
 
 // UserInfo
 // @router /douyin/user/ [GET]
@@ -49,7 +49,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 // @router /douyin/user/login/ [POST]
 // 注意: 使用 JWT 中间件后, 路由不再直接绑定此方法, 而是在 JWT 中配置的 Authenticator(认证器) 方法中调用,
 // 而路由则直接绑定的 JWT 提供的 LoginHandler 方法. 对于 UserLogin 返回的 resp 和 status 调整为
-// 通过 app.RequestContext 传递, 最终再通过 JWT 配置的 Unauthorized(未授权的) 回调方法写入 JSON 返回给客户端
+// 通过 app.RequestContext 传递, 最终再通过 JWT 配置的 Unauthorized(未授权的)、LoginResponse 等回调方法写入 JSON 返回给客户端
 func UserLogin(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")

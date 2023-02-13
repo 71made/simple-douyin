@@ -9,7 +9,7 @@ import (
 	"simple-main/simple-http/cmd/biz/controller/core"
 	"simple-main/simple-http/cmd/biz/controller/extra/first"
 	"simple-main/simple-http/cmd/biz/controller/extra/second"
-	"simple-main/simple-http/cmd/common/jwt"
+	"simple-main/simple-http/pkg/common/jwt"
 	"strings"
 )
 

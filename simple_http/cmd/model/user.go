@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"simple-main/simple-http/cmd/common/db"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/common/db"
+	"simple-main/simple-http/pkg/configs"
 	"strings"
 )
 

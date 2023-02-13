@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"simple-main/simple-http/cmd/common/db"
-	"simple-main/simple-http/cmd/common/jwt"
-	"simple-main/simple-http/cmd/common/minio"
-	"simple-main/simple-http/cmd/common/router"
+	"simple-main/simple-http/pkg/common/db"
+	"simple-main/simple-http/pkg/common/jwt"
+	"simple-main/simple-http/pkg/common/minio"
+	"simple-main/simple-http/pkg/common/router"
 )
 
 /*

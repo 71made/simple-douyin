@@ -7,8 +7,8 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"io"
 	"simple-main/simple-http/cmd/biz"
-	"simple-main/simple-http/cmd/configs"
 	"simple-main/simple-http/cmd/model"
+	"simple-main/simple-http/pkg/configs"
 	"strings"
 )
 
@@ -37,7 +37,7 @@ type UserService interface {
 	UserInfo(ctx context.Context, userId, thisUserId int64) (resp *UserResponse)
 }
 
-func GetUserServiceImpl() UserService {
+func UserServiceImpl() UserService {
 	return usInstance
 }
 

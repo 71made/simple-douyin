@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"simple-main/simple-http/cmd/biz"
-	"simple-main/simple-http/cmd/configs"
 	"simple-main/simple-http/cmd/model"
+	"simple-main/simple-http/pkg/configs"
 	"sync"
 )
 

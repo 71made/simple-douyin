@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"simple-main/simple-http/cmd/common/db"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/common/db"
+	"simple-main/simple-http/pkg/configs"
 	"strings"
 	"time"
 )

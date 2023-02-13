@@ -7,7 +7,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/configs"
 )
 
 /*

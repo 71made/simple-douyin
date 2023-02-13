@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"simple-main/simple-http/cmd/biz"
 	"simple-main/simple-http/cmd/biz/service/extra/second"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/configs"
 	"strconv"
 )
 

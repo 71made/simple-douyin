@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"simple-main/simple-http/cmd/biz"
-	"simple-main/simple-http/cmd/configs"
 	"simple-main/simple-http/cmd/model"
+	"simple-main/simple-http/pkg/configs"
 	"sync"
 )
 
@@ -22,11 +22,11 @@ const (
 )
 
 type CommentRequest struct {
-	UserId     int64  `json:"user_id"`
-	VideoId    int64  `json:"video_id"`
-	ActionType int    `json:"action_type"`
-	Content    string `json:"comment_content,omitempty"`
-	CommentId  int64  `json:"comment_id,omitempty"`
+	UserId     int64  `query:"user_id"`
+	VideoId    int64  `query:"video_id,required"`
+	ActionType int    `query:"action_type,required"`
+	Content    string `query:"comment_text"`
+	CommentId  int64  `query:"comment_id"`
 }
 
 type CommentResponse struct {
@@ -55,6 +55,7 @@ var csInstance = &commentServiceImpl{}
 
 func (cs *commentServiceImpl) Action(ctx context.Context, req *CommentRequest) (resp *CommentResponse) {
 	resp = &CommentResponse{}
+
 	switch req.ActionType {
 	case PublishComment:
 		{
@@ -69,7 +70,7 @@ func (cs *commentServiceImpl) Action(ctx context.Context, req *CommentRequest) (
 		}
 	case RemoveComment:
 		{
-			if err := model.DeleteComment(ctx, req.CommentId); err != nil {
+			if err := model.DeleteComment(ctx, req.CommentId, req.VideoId); err != nil {
 				hlog.Error(err)
 				resp.Response = *biz.NewErrorResponse(err)
 				return

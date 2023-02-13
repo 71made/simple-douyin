@@ -5,8 +5,8 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"simple-main/simple-http/cmd/common/db"
-	"simple-main/simple-http/cmd/configs"
+	"simple-main/simple-http/pkg/common/db"
+	"simple-main/simple-http/pkg/configs"
 )
 
 /*
@@ -60,8 +60,8 @@ func CreateComment(ctx context.Context, c *Comment) error {
 	return db.GetInstance().WithContext(ctx).Create(c).Error
 }
 
-func DeleteComment(ctx context.Context, commentId int64) error {
-	deleteRes := db.GetInstance().WithContext(ctx).Delete(&Comment{}, commentId)
+func DeleteComment(ctx context.Context, commentId, videoId int64) error {
+	deleteRes := db.GetInstance().WithContext(ctx).Delete(&Comment{VideoId: uint(videoId)}, commentId)
 	if deleteRes.Error != nil {
 		return deleteRes.Error
 	}
