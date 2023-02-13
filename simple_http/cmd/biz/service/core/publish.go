@@ -13,7 +13,7 @@ import (
 	"simple-main/simple-http/cmd/biz"
 	"simple-main/simple-http/cmd/model"
 	"simple-main/simple-http/pkg/common/minio"
-	configs2 "simple-main/simple-http/pkg/configs"
+	"simple-main/simple-http/pkg/configs"
 	"strings"
 )
 
@@ -88,7 +88,7 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 	}
 
 	// 构建视频保存服务器路径
-	videoFilePath := filepath.Join(configs2.VideoPathPrefix, req.VideoFinalName)
+	videoFilePath := filepath.Join(configs.VideoPathPrefix, req.VideoFinalName)
 	// 执行视频保存服务器和上传 MinIO
 	if err := Upload(videoFilePath, func(data *multipart.FileHeader) error {
 		return minio.UploadVideo(ctx, req.VideoFinalName, data)
@@ -105,7 +105,7 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 	newVideo := model.Video{
 		AuthorId: uint(req.UserId),
 		PlayUri:  req.VideoFinalName,
-		CoverUri: configs2.EmptyCoverName, // 为保证都投稿视频能有封面, 先设置为默认封面, 封面上传成功后再更新
+		CoverUri: configs.EmptyCoverName, // 为保证都投稿视频能有封面, 先设置为默认封面, 封面上传成功后再更新
 		Title:    req.Title,
 	}
 
@@ -123,20 +123,20 @@ func (ps *publishServiceImpl) PublishVideo(ctx context.Context, req *VideoPublis
 		err := model.UpdateVideoCoverUri(ctx, &newVideo)
 		// 更新失败, 恢复默认封面
 		if err != nil {
-			newVideo.CoverUri = configs2.EmptyCoverName
+			newVideo.CoverUri = configs.EmptyCoverName
 			err = errors.New("video's cover image update fail")
 		}
 
 	}
 	hlog.Info(fmt.Sprintf("video path: %s, cover path: %s",
-		configs2.ServerAddr+configs2.VideoURIPrefix+newVideo.PlayUri, configs2.ServerAddr+configs2.CoverURIPrefix+newVideo.CoverUri))
+		configs.ServerAddr+configs.VideoURIPrefix+newVideo.PlayUri, configs.ServerAddr+configs.CoverURIPrefix+newVideo.CoverUri))
 	resp = biz.NewSuccessResponse("投稿成功")
 
 	// 删除服务器缓存
 	defer func() {
 		removeCache(videoFilePath)
 		if coverFinalName != "" {
-			removeCache(filepath.Join(configs2.CoverPathPrefix + coverFinalName))
+			removeCache(filepath.Join(configs.CoverPathPrefix + coverFinalName))
 		}
 	}()
 
@@ -173,7 +173,7 @@ func getAndUploadCover(ctx context.Context, req *VideoPublishRequest) <-chan str
 	} else {
 		// 上传 MinIO
 		go func() {
-			uploadErr := minio.UploadCoverWithFilePath(ctx, coverFinalName, filepath.Join(configs2.CoverPathPrefix+coverFinalName))
+			uploadErr := minio.UploadCoverWithFilePath(ctx, coverFinalName, filepath.Join(configs.CoverPathPrefix+coverFinalName))
 			if uploadErr != nil {
 				hlog.Error(fmt.Errorf("msg: %s, err: %v", "视频封面上传出错", uploadErr))
 			}
@@ -186,10 +186,10 @@ func getAndUploadCover(ctx context.Context, req *VideoPublishRequest) <-chan str
 
 // readFrameAsJpeg 截取视频封面
 func readFrameAsJpeg(videoFinalName string) (coverFinalName string, err error) {
-	videoPath := configs2.VideoPathPrefix + videoFinalName
+	videoPath := configs.VideoPathPrefix + videoFinalName
 
 	coverFinalName = strings.TrimSuffix(videoFinalName, path.Ext(videoFinalName)) + ".jpeg"
-	coverPath := configs2.CoverPathPrefix + coverFinalName
+	coverPath := configs.CoverPathPrefix + coverFinalName
 
 	// 使用 ffmpeg 提取指定帧作为图像文件
 	cmd := exec.Command("ffmpeg",
