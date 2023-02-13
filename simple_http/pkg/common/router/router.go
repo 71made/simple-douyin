@@ -24,7 +24,7 @@ import (
 func Register(r *server.Hertz) {
 
 	// 静态资源
-	r.Static("/static", "./resources")
+	//r.Static("/static", "./resources")
 
 	root := r.Group("/douyin")
 	// 获取视频流

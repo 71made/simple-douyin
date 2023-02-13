@@ -9,6 +9,12 @@
 注：本项目作为后续 RPC 微服务项目实现的参考。
 
 ## 依赖服务
+
+**FFmpeg**：
+
+- [下载地址](https://www.ffmpeg.org/download.html#build-windows)。
+- 主要在 /publish/action/ 视频上传接口服务中，用于对用户上传视频进行封面截取并输出 .jpeg 格式封面图片。
+
 **MySQL (v8.0.32)**：
 
 - MySQL DNS 在 pkg/configs/db.go 中：
