@@ -99,7 +99,18 @@ func Register(r *server.Hertz) {
 		// 好友列表
 		_relation.GET("/friend/list/", second.GetFriendList)
 
-		_message := root.Group("/message", jwt.GetInstance().MiddlewareFunc())
+		_message := root.Group("/message", func(ctx context.Context, c *app.RequestContext) {
+			// 对于 /chat/ 接口, App 端是不断轮询的;
+			// 而在用户未登陆时发送的请求, 当进行 token 校验和解析时
+			// 会触发 JWT 中间件的 Unauthorized 回调方法, 返回失败响应,
+			// 进而导致 App 端提示 "网络异常，请检查！"
+			// 所以此处在未登陆时, 放行 /chat/ 请求, 即不做 token 校验和解析, 交由 service 层处理
+			reqURI := c.GetRequest().URI().String()
+			if token := c.Query("token"); len(token) != 0 ||
+				strings.Contains(reqURI, "/action/") {
+				jwt.GetInstance().MiddlewareFunc()(ctx, c)
+			}
+		})
 		// 轮训获取消息
 		_message.GET("/chat/", second.MessageChat)
 		// 发送消息

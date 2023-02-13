@@ -75,6 +75,13 @@ func (ms *messageServiceImpl) Action(ctx context.Context, req *MessageRequest) (
 func (ms *messageServiceImpl) Chat(ctx context.Context, fromUserId, toUserId int64) (resp *MessageChatResponse) {
 	resp = &MessageChatResponse{}
 
+	// 对于未登陆用户, 返回空列表即可
+	if fromUserId == biz.NotLoginUserId {
+		resp.Response = *biz.NewSuccessResponse("获取成功")
+		resp.MessageList = make([]biz.Message, 0)
+		return
+	}
+
 	messages, err := model.QueryMessages(ctx, fromUserId, toUserId)
 	if err != nil {
 		hlog.Error(err)

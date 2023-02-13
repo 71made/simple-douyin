@@ -32,9 +32,14 @@ func MessageChat(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	var userId int64
 	// 获取 JWT 回设的 userId
 	v, _ := c.Get(configs.IdentityKey)
-	userId := v.(*biz.User).Id
+	if v != nil {
+		userId = v.(*biz.User).Id
+	} else {
+		userId = biz.NotLoginUserId
+	}
 
 	resp := messageService.Chat(ctx, userId, toUserId)
 	c.JSON(http.StatusOK, resp)

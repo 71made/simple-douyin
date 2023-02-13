@@ -29,7 +29,7 @@ func Init() {
 		TokenLookup:   "header: Authorization, query: token, cookie: jwt, form: token",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
-		Timeout:       24 * time.Hour,
+		Timeout:       24 * time.Hour, // token 过期时间 1 天
 		MaxRefresh:    time.Hour,
 		IdentityKey:   configs.IdentityKey,
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
