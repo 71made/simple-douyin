@@ -83,7 +83,7 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o simple-http-windows.exe main
 直接执行打包程序：
 
 ```shell
-cd simple_http/cmd
+cd simple-http/cmd
 ./simple-http-linux
 # ./simple-http-mac
 # ./simple-http-windows.exe
