@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package rpc;
+
+option go_package = "simple-main/http-rcp/grpc_gen;rpc";
+
+message BaseResponse {
+  Status status_code = 1;
+  string status_msg = 2;
+  int64 resp_timestamp = 3;
+}
+
+enum Status {
+  OK = 0;
+}

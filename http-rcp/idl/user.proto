@@ -1,0 +1,65 @@
+syntax = "proto3";
+package user;
+
+import "idl/rpc.proto";
+
+option go_package = "simple-main/http-rcp/grpc_gen/user;user";
+
+message User {
+  int64 id = 1; // 用户id
+  string name = 2; // 用户名称
+  int64 follow_count = 3; // 关注总数
+  int64 follower_count = 4; // 粉丝总数
+  bool is_follow = 5; // true-已关注，false-未关注
+}
+
+service UserService {
+
+  rpc CheckLoginUser(CheckLoginUserRequest) returns (CheckLoginUserResponse) {}
+
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+
+  rpc QueryUsers(QueryUsersRequest) returns (QueryUsersResponse) {}
+
+  rpc QueryUser(QueryUserRequest) returns (QueryUserResponse) {}
+
+}
+
+message CheckLoginUserRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message CheckLoginUserResponse {
+  int64 user_id = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string password = 2;
+  string avatar = 3;
+}
+
+message CreateUserResponse {
+  User user = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+message QueryUsersRequest {
+  repeated int64 user_ids = 1;
+}
+
+message QueryUsersResponse {
+  repeated User user_list = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+message QueryUserRequest {
+  int64 user_id = 1;
+}
+
+message QueryUserResponse {
+  User user = 1;
+  rpc.BaseResponse base_response = 2;
+}
