@@ -2,10 +2,15 @@ package main
 
 import (
 	"context"
+	"crypto/md5"
+	"fmt"
 	"google.golang.org/grpc"
-	rpc "simple-main/http-rcp/grpc_gen"
-	"simple-main/http-rcp/grpc_gen/user"
-	"time"
+	"google.golang.org/grpc/grpclog"
+	"io"
+	"simple-main/http-rcp/cmd/user/dal"
+	"simple-main/http-rcp/cmd/user/pack"
+	usvr "simple-main/http-rcp/grpc_gen/user"
+	"simple-main/http-rcp/pkg/configs"
 )
 
 /*
@@ -15,30 +20,131 @@ import (
  @Description:
 */
 
-type UserServiceServerImpl struct {
-	user.UnimplementedUserServiceServer
+func newServer(opts ...grpc.ServerOption) *grpc.Server {
+	svr := grpc.NewServer(opts...)
+	usvr.RegisterUserServiceServer(svr, &UserServiceServerImpl{})
+	return svr
 }
 
-func (uss UserServiceServerImpl) CheckLoginUser(ctx context.Context, req *user.CheckLoginUserRequest) (*user.CheckLoginUserResponse, error) {
-	return &user.CheckLoginUserResponse{
-		UserId: 1,
-		BaseResponse: &rpc.BaseResponse{
-			StatusCode:    rpc.Status_OK,
-			StatusMsg:     "请求成功",
-			RespTimestamp: time.Now().Unix(),
-		},
+type UserServiceServerImpl struct {
+	usvr.UnimplementedUserServiceServer
+}
+
+func (uss UserServiceServerImpl) CheckLoginUser(ctx context.Context, req *usvr.CheckLoginUserRequest) (*usvr.CheckLoginUserResponse, error) {
+	resp := &usvr.CheckLoginUserResponse{}
+
+	username := req.Username
+	password := req.Password
+	h := md5.New()
+	if _, err := io.WriteString(h, password); err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+	// MD5 摘要算法处理密码
+	password = fmt.Sprintf("%x", h.Sum(nil))
+
+	user, err := dal.QueryUser(ctx, username)
+	if err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+
+	if user.Password != password {
+		resp.BaseResponse = pack.NewFailureResponse("用户名或密码错误")
+		return resp, nil
+	}
+
+	return &usvr.CheckLoginUserResponse{
+		UserId:       int64(user.ID),
+		BaseResponse: pack.NewSuccessResponse("校验通过"),
 	}, nil
 }
 
-//func (uss UserServiceServerImpl) CreateUser(ctx context.Context, req *user.CreateUserRequest) (*user.CreateUserResponse, error) {
-//}
-//func (uss UserServiceServerImpl) QueryUsers(ctx context.Context, req *user.QueryUsersRequest) (*user.QueryUsersResponse, error) {
-//}
-//func (uss UserServiceServerImpl) QueryUser(ctx context.Context, req *user.QueryUserRequest) (*user.QueryUserResponse, error) {
-//}
+func (uss UserServiceServerImpl) CreateUser(ctx context.Context, req *usvr.CreateUserRequest) (*usvr.CreateUserResponse, error) {
+	resp := &usvr.CreateUserResponse{}
 
-func newServer(opts ...grpc.ServerOption) *grpc.Server {
-	svr := grpc.NewServer(opts...)
-	user.RegisterUserServiceServer(svr, &UserServiceServerImpl{})
-	return svr
+	found, err := dal.IsExistUser(ctx, req.Username)
+	if err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+
+	if found {
+		resp.BaseResponse = pack.NewFailureResponse("该用户名已被使用")
+		return resp, nil
+	}
+
+	h := md5.New()
+	if _, err = io.WriteString(h, req.Password); err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+	// MD5 摘要算法处理密码
+	password := fmt.Sprintf("%x", h.Sum(nil))
+
+	// 构建 user
+	user := &dal.User{
+		Username: req.Username,
+		Password: password,
+		Avatar:   req.Avatar,
+	}
+
+	// 设置默认头像
+	if len(user.Avatar) == 0 {
+		user.Avatar = configs.EmptyAvatarName
+	}
+
+	if err = dal.CreateUser(ctx, user); err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+
+	resp.User = pack.User(user)
+	resp.BaseResponse = pack.NewSuccessResponse("创建成功")
+	return resp, nil
+}
+
+func (uss UserServiceServerImpl) QueryUsers(ctx context.Context, req *usvr.QueryUsersRequest) (*usvr.QueryUsersResponse, error) {
+	resp := &usvr.QueryUsersResponse{}
+
+	userIds := req.UserIds
+
+	if len(userIds) == 0 {
+		resp.UserList = pack.Users(nil)
+		resp.BaseResponse = pack.NewSuccessResponse("获取成功")
+		return resp, nil
+	}
+
+	users, err := dal.QueryUsersByIds(ctx, userIds)
+	if err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+
+	resp.UserList = pack.Users(users)
+	resp.BaseResponse = pack.NewSuccessResponse("获取成功")
+	return resp, nil
+}
+
+func (uss UserServiceServerImpl) QueryUser(ctx context.Context, req *usvr.QueryUserRequest) (*usvr.QueryUserResponse, error) {
+	resp := &usvr.QueryUserResponse{}
+
+	userId := req.UserId
+
+	user, err := dal.QueryUserById(ctx, userId)
+	if err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		return resp, nil
+	}
+
+	resp.User = pack.User(user)
+	resp.BaseResponse = pack.NewSuccessResponse("获取成功")
+	return resp, nil
 }

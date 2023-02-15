@@ -39,6 +39,13 @@ func NewFailureResponse(failureMsg string) *Response {
 	}
 }
 
+func NewResponse(code int32, msg string) *Response {
+	return &Response{
+		StatusCode: code,
+		StatusMsg:  msg,
+	}
+}
+
 type Video struct {
 	Id            int64  `json:"id"`
 	Author        User   `json:"author"`

@@ -2,13 +2,9 @@ package rpc
 
 import (
 	"context"
-	"crypto/md5"
-	"errors"
-	"fmt"
-	"io"
 	"simple-main/http-rcp/cmd/api/biz"
 	rpc "simple-main/http-rcp/grpc_gen"
-	"simple-main/http-rcp/grpc_gen/user"
+	usvr "simple-main/http-rcp/grpc_gen/user"
 	"simple-main/http-rcp/pkg/configs"
 	"simple-main/http-rcp/pkg/utils/grpc"
 )
@@ -20,43 +16,76 @@ import (
  @Description:
 */
 
-func userServiceClient() (client user.UserServiceClient, err error) {
+func userServiceClient() (client usvr.UserServiceClient, err error) {
 	conn, err := grpc.InitClientConn(configs.Etcd, configs.UserServerName)
 	if err != nil {
 		return nil, err
 	}
-	return user.NewUserServiceClient(conn), nil
+	return usvr.NewUserServiceClient(conn), nil
 }
 
-func CheckLoginUser(ctx context.Context, username, password string) (int64, error) {
-	h := md5.New()
-	if _, err := io.WriteString(h, password); err != nil {
-		return biz.NotLoginUserId, err
-	}
+func CheckLoginUser(ctx context.Context, username, password string) (int64, *biz.Response) {
 
-	// MD5 摘要算法处理密码
-	password = fmt.Sprintf("%x", h.Sum(nil))
-
-	req := &user.CheckLoginUserRequest{
+	req := &usvr.CheckLoginUserRequest{
 		Username: username,
 		Password: password,
 	}
 
 	client, err := userServiceClient()
-
 	if err != nil {
-		return biz.NotLoginUserId, err
+		return biz.NotLoginUserId, biz.NewErrorResponse(err)
 	}
 
 	resp, err := client.CheckLoginUser(ctx, req)
 	if err != nil {
-		return biz.NotLoginUserId, err
+		return biz.NotLoginUserId, biz.NewErrorResponse(err)
 	}
-	if resp != nil && resp.BaseResponse.GetStatusCode() != rpc.Status_OK {
-		return biz.NotLoginUserId, errors.New("user rpc server has error")
+	if resp != nil && resp.BaseResponse.StatusCode != rpc.Status_OK {
+		return biz.NotLoginUserId, NewBizResponse(resp.BaseResponse)
 	}
 
-	fmt.Println(resp)
+	return resp.UserId, biz.NewSuccessResponse(resp.BaseResponse.StatusMsg)
+}
 
-	return resp.UserId, nil
+func CreateUser(ctx context.Context, username, password, avatar string) (*usvr.User, *biz.Response) {
+
+	req := &usvr.CreateUserRequest{
+		Username: username,
+		Password: password,
+		Avatar:   avatar,
+	}
+
+	client, err := userServiceClient()
+	if err != nil {
+		return nil, biz.NewErrorResponse(err)
+	}
+
+	resp, err := client.CreateUser(ctx, req)
+	if err != nil {
+		return nil, biz.NewErrorResponse(err)
+	}
+
+	if resp != nil && resp.BaseResponse.StatusCode != rpc.Status_OK {
+		return nil, NewBizResponse(resp.BaseResponse)
+	}
+	return resp.User, biz.NewSuccessResponse(resp.BaseResponse.StatusMsg)
+}
+
+func QueryUser(ctx context.Context, userId int64) (*usvr.User, *biz.Response) {
+	req := &usvr.QueryUserRequest{UserId: userId}
+
+	client, err := userServiceClient()
+	if err != nil {
+		return nil, biz.NewErrorResponse(err)
+	}
+
+	resp, err := client.QueryUser(ctx, req)
+	if err != nil {
+		return nil, biz.NewErrorResponse(err)
+	}
+
+	if resp != nil && resp.BaseResponse.StatusCode != rpc.Status_OK {
+		return nil, NewBizResponse(resp.BaseResponse)
+	}
+	return resp.User, biz.NewSuccessResponse(resp.BaseResponse.StatusMsg)
 }

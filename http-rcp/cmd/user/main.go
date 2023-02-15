@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc/grpclog"
 	"net"
+	"simple-main/http-rcp/cmd/user/dal/db"
 	"simple-main/http-rcp/pkg/configs"
 	"simple-main/http-rcp/pkg/utils"
 	"simple-main/http-rcp/pkg/utils/etcd"
@@ -20,6 +21,7 @@ import (
 
 func preInit() {
 	log.Init()
+	db.Init()
 }
 
 func main() {

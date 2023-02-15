@@ -8,9 +8,9 @@ option go_package = "simple-main/http-rcp/grpc_gen/user;user";
 message User {
   int64 id = 1; // 用户id
   string name = 2; // 用户名称
-  int64 follow_count = 3; // 关注总数
-  int64 follower_count = 4; // 粉丝总数
-  bool is_follow = 5; // true-已关注，false-未关注
+  string avatar = 3; // 用户头像
+  int64 follow_count = 4; // 关注总数
+  int64 follower_count = 5; // 粉丝总数
 }
 
 service UserService {

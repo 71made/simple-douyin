@@ -12,4 +12,6 @@ message BaseResponse {
 
 enum Status {
   OK = 0;
+  Failure = 1;
+  Error = 2;
 }
