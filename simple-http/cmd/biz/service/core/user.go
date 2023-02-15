@@ -82,7 +82,6 @@ func (us *userServiceImpl) Register(ctx context.Context, user *model.User) (resp
 
 	resp.Response = *biz.NewSuccessResponse("注册成功")
 	resp.UserId = int64(user.ID)
-	resp.Token = fmt.Sprintf("%x", h.Sum([]byte(user.Username)))
 	return
 }
 
@@ -116,7 +115,6 @@ func (us *userServiceImpl) Login(ctx context.Context, username string, password 
 
 	resp.Response = *biz.NewSuccessResponse("登陆成功")
 	resp.UserId = int64(user.ID)
-	resp.Token = fmt.Sprintf("%x", h.Sum([]byte(user.Username)))
 	return
 }
 
