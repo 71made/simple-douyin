@@ -17,7 +17,7 @@ import (
  @Author: 71made
  @Date: 2023/01/25 13:50
  @ProductName: user.go
- @Description: 用户相关服务接口处理的 controller
+ @Description: 用户相关服务接口处理的 handler
 */
 
 var userService = core.UserServiceImpl()
@@ -30,6 +30,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		resp := biz.NewFailureResponse("请求参数异常")
 		hlog.Errorf(fmt.Sprintf("msg : %s\n error: %v", "user_id 类型转换错误", err))
 		c.JSON(http.StatusBadRequest, resp)
+		return
 	}
 
 	var thisUserId int64

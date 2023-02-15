@@ -18,7 +18,7 @@ import (
  @Author: 71made
  @Date: 2023/01/27 19:57
  @ProductName: publish.go
- @Description: 发布视频、发布列表服务接口处理的 controller
+ @Description: 发布视频、发布列表服务接口处理的 handler
 */
 
 var publishService = core.GetPublishServiceImpl()

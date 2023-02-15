@@ -6,7 +6,7 @@ import (
 	"github.com/hertz-contrib/jwt"
 	"net/http"
 	"simple-main/simple-http/cmd/biz"
-	"simple-main/simple-http/cmd/biz/controller/core"
+	handler "simple-main/simple-http/cmd/biz/handler/core"
 	service "simple-main/simple-http/cmd/biz/service/core"
 	"simple-main/simple-http/pkg/configs"
 	"sync"
@@ -47,7 +47,7 @@ func Init() {
 			return jwt.MapClaims{}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
-			core.UserLogin(ctx, c)
+			handler.UserLogin(ctx, c)
 			resp, found := c.Get("resp")
 			loginResp := resp.(*service.UserLoginResponse)
 			if found && loginResp.StatusCode == 0 {

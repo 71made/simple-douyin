@@ -35,6 +35,7 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		hlog.Error(err)
 		c.JSON(http.StatusBadRequest, biz.NewErrorResponse(fmt.Errorf("参数绑定失败")))
+		return
 	}
 	req.UserId = userId
 

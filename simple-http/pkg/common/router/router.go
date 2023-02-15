@@ -6,9 +6,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"net/http"
 	"simple-main/simple-http/cmd/biz"
-	"simple-main/simple-http/cmd/biz/controller/core"
-	"simple-main/simple-http/cmd/biz/controller/extra/first"
-	"simple-main/simple-http/cmd/biz/controller/extra/second"
+	"simple-main/simple-http/cmd/biz/handler/core"
+	"simple-main/simple-http/cmd/biz/handler/extra/first"
+	"simple-main/simple-http/cmd/biz/handler/extra/second"
 	"simple-main/simple-http/pkg/common/jwt"
 	"strings"
 )
