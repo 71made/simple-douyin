@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"gorm.io/gorm"
 	"simple-main/simple-http/pkg/common/db"
 	"simple-main/simple-http/pkg/configs"
@@ -28,6 +29,22 @@ func (v *Video) TableName() string {
 	return configs.VideoTable
 }
 
+// BeforeCreate
+// 通过 GORM 提供的 Hook 实现关联更新 user 记录的 video_count
+func (v *Video) BeforeCreate(tx *gorm.DB) (err error) {
+	updateRes := tx.Model(&User{}).Where("id = ?", v.AuthorId).
+		Update("video_count", gorm.Expr("`video_count` + 1"))
+
+	if updateRes.RowsAffected <= 0 {
+		return errors.New("update user record fail")
+	}
+	if updateRes.RowsAffected > 1 {
+		// 做兜底处理
+		return errors.New("user table records is dirty")
+	}
+	return nil
+}
+
 func QueryVideos(ctx context.Context, options ...PageOption) ([]Video, error) {
 	res := make([]Video, 0)
 
@@ -37,8 +54,8 @@ func QueryVideos(ctx context.Context, options ...PageOption) ([]Video, error) {
 	}
 
 	if err := page.Exec(
-		db.GetInstance().WithContext(ctx).
-			Order("created_at DESC")).Find(&res).Error; err != nil {
+		db.GetInstance().WithContext(ctx)).
+		Order("created_at DESC").Find(&res).Error; err != nil {
 		return nil, err
 	}
 	return res, nil

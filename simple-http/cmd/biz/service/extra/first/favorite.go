@@ -157,6 +157,8 @@ func GetBizFavoriteVideoList(ctx context.Context, videos []model.Video, userId i
 				Id:            int64(user.ID),
 				Name:          user.Username,
 				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+				WorkCount:     user.VideoCount,
+				LikeCount:     user.FavoriteCount,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
 			}

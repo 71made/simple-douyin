@@ -5,6 +5,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"simple-main/simple-http/cmd/biz"
 	"simple-main/simple-http/cmd/model"
+	"time"
 )
 
 /*
@@ -17,6 +18,10 @@ import (
 const (
 	Send = 1
 )
+
+// messageCache
+// 缓存用户消息获取情况, 映射关系为 userId -> message.CreateTime (该用户上次获取的最新消息创建时间)
+var messageCache = map[int64]int64{}
 
 type MessageRequest struct {
 	UserId     int64  `query:"user_id"`
@@ -82,7 +87,12 @@ func (ms *messageServiceImpl) Chat(ctx context.Context, fromUserId, toUserId int
 		return
 	}
 
-	messages, err := model.QueryMessages(ctx, fromUserId, toUserId)
+	// 获取缓存中该用户上次获取的最新消息创建时间
+	lastTime, found := messageCache[fromUserId]
+	if !found {
+		lastTime = time.Now().Unix()
+	}
+	messages, err := model.QueryMessages(ctx, fromUserId, toUserId, model.PageAfter(lastTime))
 	if err != nil {
 		hlog.Error(err)
 		resp.Response = *biz.NewErrorResponse(err)
@@ -100,6 +110,13 @@ func (ms *messageServiceImpl) Chat(ctx context.Context, fromUserId, toUserId int
 			CreateTime: message.CreatedAt.Unix(),
 		}
 	}
+
+	// 缓存结果
+	count := len(messageList)
+	if count != 0 {
+		messageCache[fromUserId] = messageList[count-1].CreateTime
+	}
+
 	resp.Response = *biz.NewSuccessResponse("获取成功")
 	resp.MessageList = messageList
 	return

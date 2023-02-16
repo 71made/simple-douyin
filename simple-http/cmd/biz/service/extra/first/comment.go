@@ -129,6 +129,8 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, thisUserId, video
 				Id:            int64(user.ID),
 				Name:          user.Username,
 				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+				WorkCount:     user.VideoCount,
+				LikeCount:     user.FavoriteCount,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
 			}
@@ -202,7 +204,7 @@ func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRe
 		}
 	}()
 
-	var user biz.User
+	var user *biz.User
 	var queryErr error
 	go func() {
 		defer wg.Done()
@@ -211,10 +213,12 @@ func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRe
 		if queryErr != nil {
 			return
 		}
-		user = biz.User{
+		user = &biz.User{
 			Id:            int64(u.ID),
 			Name:          u.Username,
 			AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + u.Avatar,
+			WorkCount:     u.VideoCount,
+			LikeCount:     u.FavoriteCount,
 			FollowCount:   u.FollowCount,
 			FollowerCount: u.FollowerCount,
 			IsFollow:      false, // 对于用户自己, IsFollow 实际上就是默认的 false
@@ -233,7 +237,7 @@ func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRe
 
 	return &biz.Comment{
 		Id:         int64(newComment.ID),
-		User:       user,
+		User:       *user,
 		Content:    newComment.Content,
 		CreateDate: newComment.CreatedAt.Format("01-02"),
 	}, nil

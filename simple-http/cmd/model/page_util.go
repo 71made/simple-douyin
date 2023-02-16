@@ -53,8 +53,15 @@ func PageOffset(offset int) PageOption {
 	}
 }
 
-func PageAfter(startTime time.Time) PageOption {
+func PageAfter(startTime interface{}) PageOption {
 	return func(page *Page) {
-		page.StartTime = startTime
+		switch startTime.(type) {
+		case time.Time:
+			page.StartTime = startTime.(time.Time)
+		case int64:
+			page.StartTime = time.Unix(startTime.(int64), 0)
+		default:
+			page.StartTime = defaultTime
+		}
 	}
 }

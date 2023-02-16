@@ -153,6 +153,8 @@ func (us *userServiceImpl) UserInfo(ctx context.Context, userId, thisUserId int6
 		AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 		FollowCount:   user.FollowCount,
 		FollowerCount: user.FollowerCount,
+		WorkCount:     user.VideoCount,
+		LikeCount:     user.FavoriteCount,
 		IsFollow:      isFollow,
 	}
 	return

@@ -22,6 +22,8 @@ type User struct {
 	Username      string
 	Password      string
 	Avatar        string
+	VideoCount    int64
+	FavoriteCount int64
 	FollowCount   int64
 	FollowerCount int64
 }

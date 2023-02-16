@@ -69,11 +69,17 @@ func DeleteMessage(ctx context.Context, messageId, userId int64) error {
 	return nil
 }
 
-func QueryMessages(ctx context.Context, fromId, toId int64) ([]Message, error) {
+func QueryMessages(ctx context.Context, fromId, toId int64, options ...PageOption) ([]Message, error) {
+
+	page := DefaultPage()
+	for _, opt := range options {
+		opt(page)
+	}
+
 	res := make([]Message, 0)
-	if err := db.GetInstance().WithContext(ctx).
+	if err := page.Exec(db.GetInstance().WithContext(ctx).
 		Where("from_user_id = ? and to_user_id = ?", fromId, toId).
-		Or("to_user_id = ? and from_user_id = ?", fromId, toId).
+		Or("to_user_id = ? and from_user_id = ?", fromId, toId)).
 		Order("created_at ASC").
 		Find(&res).Error; err != nil {
 		return nil, err

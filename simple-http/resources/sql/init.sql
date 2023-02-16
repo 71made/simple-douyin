@@ -3,6 +3,8 @@ CREATE TABLE `user`
     `id`             bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
     `username`       varchar(128) NOT NULL DEFAULT '' COMMENT 'Username',
     `password`       varchar(128) NOT NULL DEFAULT '' COMMENT 'Password',
+    `video_count`    bigint NOT NULL DEFAULT 0 COMMENT 'User video count',
+    `favorite_count` bigint NOT NULL DEFAULT 0 COMMENT 'User favorite video count',
     `follow_count`   bigint NOT NULL DEFAULT 0 COMMENT 'User follow count',
     `follower_count` bigint NOT NULL DEFAULT 0 COMMENT 'User follower count',
     `created_at`     timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User account create time',

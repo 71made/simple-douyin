@@ -223,6 +223,8 @@ func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []mod
 			Id:            int64(user.ID),
 			Name:          user.Username,
 			AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+			WorkCount:     user.VideoCount,
+			LikeCount:     user.FavoriteCount,
 			FollowCount:   user.FollowCount,
 			FollowerCount: user.FollowerCount,
 			IsFollow:      isFollowMap[user.ID],
@@ -281,6 +283,8 @@ func (rs *relationServiceImpl) transToFriendUsers(ctx context.Context, relations
 				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
 				FollowCount:   user.FollowCount,
 				FollowerCount: user.FollowerCount,
+				WorkCount:     user.VideoCount,
+				LikeCount:     user.FavoriteCount,
 				IsFollow:      true,
 			},
 		}

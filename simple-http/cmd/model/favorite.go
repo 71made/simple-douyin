@@ -50,24 +50,32 @@ func (f *Favorite) GetFavoriteType() uint {
 }
 
 // BeforeCreate
-// 通过 GORM 提供的 Hook 实现关联更新 video 记录的 favorite_count
+// 通过 GORM 提供的 Hook 实现关联更新 video 和 user 记录的 favorite_count
 func (f *Favorite) BeforeCreate(tx *gorm.DB) (err error) {
-	return f.syncUpdateFavoriteCount(tx, gorm.Expr("favorite_count + 1"))
+	return f.syncUpdateFavoriteCount(tx, gorm.Expr("`favorite_count` + 1"))
 }
 
 // BeforeUpdate
-// 同理, 通过 Hook 实现关联更新 video 记录的 favorite_count
+// 同理, 通过 Hook 实现关联更新 video 和 user 记录的 favorite_count
 func (f *Favorite) BeforeUpdate(tx *gorm.DB) (err error) {
 	var expr clause.Expr
 	if f.IsFavorite() {
-		expr = gorm.Expr("favorite_count + 1")
+		expr = gorm.Expr("`favorite_count` + 1")
 	} else {
-		expr = gorm.Expr("favorite_count - 1")
+		expr = gorm.Expr("`favorite_count` - 1")
 	}
 	return f.syncUpdateFavoriteCount(tx, expr)
 }
 
 func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
+	err = f.syncUpdateVideoFavoriteCount(tx, expr)
+	if err != nil {
+		return
+	}
+	return f.syncUpdateUserFavoriteCount(tx, expr)
+}
+
+func (f *Favorite) syncUpdateVideoFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
 
 	updateRes := tx.Model(&Video{}).Where("id = ?", f.VideoId).
 		Update("favorite_count", expr)
@@ -81,6 +89,22 @@ func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB, expr clause.Expr) (err e
 		// 对于影响数超过 1 的更新, 逻辑上是不合理的, 可能是 video 产生脏数据
 		// 实际上, 在主键约束下不可能出现此情况, 仅做兜底处理
 		return errors.New("user_video table records is dirty")
+	}
+	return nil
+}
+
+func (f *Favorite) syncUpdateUserFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
+	updateRes := tx.Model(&User{}).Where("id = ?", f.UserId).
+		Update("favorite_count", expr)
+	if err = updateRes.Error; err != nil {
+		return err
+	}
+	if updateRes.RowsAffected <= 0 {
+		return errors.New("update user record fail")
+	}
+	if updateRes.RowsAffected > 1 {
+		// 做兜底处理
+		return errors.New("user table records is dirty")
 	}
 	return nil
 }
