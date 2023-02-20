@@ -28,7 +28,7 @@ type FeedService interface {
 	GetFeed(ctx context.Context, lastTime time.Time, userId int64) (resp *FeedResponse)
 }
 
-func GetFeedServiceImpl() FeedService {
+func FeedServiceImpl() FeedService {
 	return fsInstance
 }
 

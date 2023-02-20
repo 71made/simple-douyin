@@ -82,7 +82,6 @@ func IsExistVideo(ctx context.Context, userId int64, title string) (bool, error)
 }
 
 func CreateVideo(ctx context.Context, video *Video) error {
-
 	return db.GetInstance().WithContext(ctx).Create(video).Error
 }
 

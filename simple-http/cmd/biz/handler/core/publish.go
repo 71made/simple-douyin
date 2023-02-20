@@ -21,7 +21,7 @@ import (
  @Description: 发布视频、发布列表服务接口处理的 handler
 */
 
-var publishService = core.GetPublishServiceImpl()
+var publishService = core.PublishServiceImpl()
 
 // Publish
 // @router /douyin/publish/action/ [POST]

@@ -18,7 +18,7 @@ import (
  @Description:
 */
 
-var feedService = core.GetFeedServiceImpl()
+var feedService = core.FeedServiceImpl()
 
 // Feed
 // @router /douyin/feed/ [POST]

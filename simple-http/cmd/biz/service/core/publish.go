@@ -41,7 +41,7 @@ type PublishService interface {
 	PublishVideo(ctx context.Context, req *VideoPublishRequest, method UploadMethod) (resp *biz.Response)
 }
 
-func GetPublishServiceImpl() PublishService {
+func PublishServiceImpl() PublishService {
 	return psInstance
 }
 

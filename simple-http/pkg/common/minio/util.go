@@ -355,6 +355,9 @@ func upload(ctx context.Context, fileName string, reader io.Reader, size int64) 
 
 func UploadVideo(ctx context.Context, finalName string, data *multipart.FileHeader) error {
 	file, err := data.Open()
+	defer func(file multipart.File) {
+		_ = file.Close()
+	}(file)
 	if err != nil {
 		return err
 	}
@@ -375,11 +378,7 @@ func UploadCoverWithFilePath(ctx context.Context, finalName, filepath string) er
 		return err
 	}
 
-	err = UploadCover(ctx, finalName, file)
-	if err != nil {
-		return err
-	}
-	return nil
+	return UploadCover(ctx, finalName, file)
 }
 
 // remove 文件删除
