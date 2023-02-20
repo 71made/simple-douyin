@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/minio/minio-go/v7"
 	"io"
-	"mime/multipart"
 	"os"
 	"path"
 	"simple-main/http-rcp/pkg/configs"
@@ -353,33 +352,33 @@ func upload(ctx context.Context, fileName string, reader io.Reader, size int64) 
 	return nil
 }
 
-func UploadVideo(ctx context.Context, finalName string, data *multipart.FileHeader) error {
-	file, err := data.Open()
+func UploadVideo(ctx context.Context, finalName, filepath string) error {
+	reader, closeFile, err := fileReader(filepath)
+	defer closeFile()
 	if err != nil {
 		return err
 	}
-	return upload(ctx, configs.Video+finalName, file, data.Size)
+
+	return upload(ctx, configs.Video+finalName, reader, -1)
 }
 
-func UploadCover(ctx context.Context, finalName string, reader io.Reader) error {
+func UploadCover(ctx context.Context, finalName, filepath string) error {
+	reader, closeFile, err := fileReader(filepath)
+	defer closeFile()
+	if err != nil {
+		return err
+	}
+
 	return upload(ctx, configs.Cover+finalName, reader, -1)
 }
 
-func UploadCoverWithFilePath(ctx context.Context, finalName, filepath string) error {
+func fileReader(filepath string) (io.Reader, func(), error) {
 	file, err := os.Open(filepath)
-	defer func(file *os.File) {
-		_ = file.Close()
-	}(file)
 
 	if err != nil {
-		return err
+		return nil, func() {}, err
 	}
-
-	err = UploadCover(ctx, finalName, file)
-	if err != nil {
-		return err
-	}
-	return nil
+	return file, func() { _ = file.Close() }, nil
 }
 
 // remove 文件删除

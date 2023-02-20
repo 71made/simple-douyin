@@ -16,12 +16,12 @@ import (
  @Description:
 */
 
-func userServiceClient() (client usvr.UserServiceClient, err error) {
+func userManagementClient() (client usvr.UserManagementClient, err error) {
 	conn, err := grpc.InitClientConn(configs.Etcd, configs.UserServerName)
 	if err != nil {
 		return nil, err
 	}
-	return usvr.NewUserServiceClient(conn), nil
+	return usvr.NewUserManagementClient(conn), nil
 }
 
 func CheckLoginUser(ctx context.Context, username, password string) (int64, *biz.Response) {
@@ -31,7 +31,7 @@ func CheckLoginUser(ctx context.Context, username, password string) (int64, *biz
 		Password: password,
 	}
 
-	client, err := userServiceClient()
+	client, err := userManagementClient()
 	if err != nil {
 		return biz.NotLoginUserId, biz.NewErrorResponse(err)
 	}
@@ -55,7 +55,7 @@ func CreateUser(ctx context.Context, username, password, avatar string) (*usvr.U
 		Avatar:   avatar,
 	}
 
-	client, err := userServiceClient()
+	client, err := userManagementClient()
 	if err != nil {
 		return nil, biz.NewErrorResponse(err)
 	}
@@ -74,7 +74,7 @@ func CreateUser(ctx context.Context, username, password, avatar string) (*usvr.U
 func QueryUser(ctx context.Context, userId int64) (*usvr.User, *biz.Response) {
 	req := &usvr.QueryUserRequest{UserId: userId}
 
-	client, err := userServiceClient()
+	client, err := userManagementClient()
 	if err != nil {
 		return nil, biz.NewErrorResponse(err)
 	}
@@ -88,4 +88,23 @@ func QueryUser(ctx context.Context, userId int64) (*usvr.User, *biz.Response) {
 		return nil, NewBizResponse(resp.BaseResponse)
 	}
 	return resp.User, biz.NewSuccessResponse(resp.BaseResponse.StatusMsg)
+}
+
+func QueryUsers(ctx context.Context, userIds []int64) ([]*usvr.User, *biz.Response) {
+	req := &usvr.QueryUsersRequest{UserIds: userIds}
+
+	client, err := userManagementClient()
+	if err != nil {
+		return nil, biz.NewErrorResponse(err)
+	}
+
+	resp, err := client.QueryUsers(ctx, req)
+	if err != nil {
+		return nil, biz.NewErrorResponse(err)
+	}
+
+	if resp != nil && resp.BaseResponse.StatusCode != rpc.Status_OK {
+		return nil, NewBizResponse(resp.BaseResponse)
+	}
+	return resp.UserList, biz.NewSuccessResponse(resp.BaseResponse.StatusMsg)
 }

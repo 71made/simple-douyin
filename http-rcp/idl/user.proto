@@ -9,19 +9,13 @@ message User {
   int64 id = 1; // 用户id
   string name = 2; // 用户名称
   string avatar = 3; // 用户头像
-  int64 follow_count = 4; // 关注总数
-  int64 follower_count = 5; // 粉丝总数
-}
-
-service UserService {
-
-  rpc CheckLoginUser(CheckLoginUserRequest) returns (CheckLoginUserResponse) {}
-
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
-
-  rpc QueryUsers(QueryUsersRequest) returns (QueryUsersResponse) {}
-
-  rpc QueryUser(QueryUserRequest) returns (QueryUserResponse) {}
+  string background_image = 4; // 用户个人页面顶部背景图
+  string signature = 5; // 个人简介
+  int64 total_favorite_count = 6; // 用户总获赞数
+  int64 video_count = 7; // 用户视频发布数
+  int64 favorite_count = 8; // 用户点赞喜欢视频数
+  int64 follow_count = 9; // 关注总数
+  int64 follower_count = 10; // 粉丝总数
 
 }
 
@@ -62,4 +56,16 @@ message QueryUserRequest {
 message QueryUserResponse {
   User user = 1;
   rpc.BaseResponse base_response = 2;
+}
+
+service UserManagement {
+
+  rpc CheckLoginUser(CheckLoginUserRequest) returns (CheckLoginUserResponse) {}
+
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+
+  rpc QueryUsers(QueryUsersRequest) returns (QueryUsersResponse) {}
+
+  rpc QueryUser(QueryUserRequest) returns (QueryUserResponse) {}
+
 }

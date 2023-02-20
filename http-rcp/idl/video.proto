@@ -1,0 +1,59 @@
+syntax = "proto3";
+package video;
+
+import "idl/rpc.proto";
+
+option go_package = "simple-main/http-rcp/grpc_gen/video;video";
+
+message Video {
+  int64 id = 1;
+  int64 author_id = 2;
+  string play_url = 3;
+  string cover_url = 4;
+  int64 favorite_count = 5;
+  int64 comment_count = 6;
+  string title = 7;
+  int64 create_time = 8;
+}
+
+message CreateVideoRequest {
+  string video_final_name = 1;
+  string title = 2;
+  int64 author_id = 3;
+}
+
+message CreateVideoResponse {
+  rpc.BaseResponse base_response = 1;
+}
+
+message QueryVideosRequest {
+  optional int64 user_id = 1; // 上送 user_id 则代表查询自己发布的视频
+  repeated int64 video_ids = 2; // 上送 video_ids 数组, 代表查询此数组中 id 对应的视频
+}
+
+message QueryVideosResponse {
+  repeated Video video_list = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+message QueryFeedVideoRequest {
+  int32 limit = 1;
+  int64 last_time = 2;
+}
+
+message QueryFeedVideosResponse {
+  repeated Video video_list = 1;
+  int64 next_time = 2;
+  rpc.BaseResponse base_response = 3;
+}
+
+service VideoManagement {
+
+  rpc CreateVideo(CreateVideoRequest) returns (CreateVideoResponse) {}
+
+  rpc QueryVideos(QueryVideosRequest) returns (QueryVideosResponse) {}
+
+  rpc QueryFeedVideos(QueryFeedVideoRequest) returns (QueryFeedVideosResponse) {}
+
+}
+

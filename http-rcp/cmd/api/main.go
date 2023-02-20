@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/obs-opentelemetry/tracing"
 	"simple-main/http-rcp/cmd/api/router"
-	"simple-main/http-rcp/pkg/utils/minio"
 )
 
 /*
@@ -16,9 +14,8 @@ import (
  @Description:
 */
 
-func perInit(ctx context.Context, h *server.Hertz) {
+func perInit(h *server.Hertz) {
 	router.Init(h)
-	minio.Init(ctx)
 
 	// hlog init
 	// 配置 hertz 日志格式, 默认格式
@@ -36,7 +33,7 @@ func main() {
 		tracer,
 	)
 
-	perInit(context.Background(), h)
+	perInit(h)
 
 	// use otel mw
 	h.Use(tracing.ServerMiddleware(cfg))

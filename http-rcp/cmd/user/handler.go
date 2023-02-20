@@ -22,15 +22,17 @@ import (
 
 func newServer(opts ...grpc.ServerOption) *grpc.Server {
 	svr := grpc.NewServer(opts...)
-	usvr.RegisterUserServiceServer(svr, &UserServiceServerImpl{})
+	usvr.RegisterUserManagementServer(svr, &UserManagementServerImpl{})
 	return svr
 }
 
-type UserServiceServerImpl struct {
-	usvr.UnimplementedUserServiceServer
+// UserManagementServerImpl
+// 继承 grpc 提供的类, 重写接口实现服务功能
+type UserManagementServerImpl struct {
+	usvr.UnimplementedUserManagementServer
 }
 
-func (uss UserServiceServerImpl) CheckLoginUser(ctx context.Context, req *usvr.CheckLoginUserRequest) (*usvr.CheckLoginUserResponse, error) {
+func (uss UserManagementServerImpl) CheckLoginUser(ctx context.Context, req *usvr.CheckLoginUserRequest) (*usvr.CheckLoginUserResponse, error) {
 	resp := &usvr.CheckLoginUserResponse{}
 
 	username := req.Username
@@ -62,7 +64,7 @@ func (uss UserServiceServerImpl) CheckLoginUser(ctx context.Context, req *usvr.C
 	}, nil
 }
 
-func (uss UserServiceServerImpl) CreateUser(ctx context.Context, req *usvr.CreateUserRequest) (*usvr.CreateUserResponse, error) {
+func (uss UserManagementServerImpl) CreateUser(ctx context.Context, req *usvr.CreateUserRequest) (*usvr.CreateUserResponse, error) {
 	resp := &usvr.CreateUserResponse{}
 
 	found, err := dal.IsExistUser(ctx, req.Username)
@@ -109,7 +111,7 @@ func (uss UserServiceServerImpl) CreateUser(ctx context.Context, req *usvr.Creat
 	return resp, nil
 }
 
-func (uss UserServiceServerImpl) QueryUsers(ctx context.Context, req *usvr.QueryUsersRequest) (*usvr.QueryUsersResponse, error) {
+func (uss UserManagementServerImpl) QueryUsers(ctx context.Context, req *usvr.QueryUsersRequest) (*usvr.QueryUsersResponse, error) {
 	resp := &usvr.QueryUsersResponse{}
 
 	userIds := req.UserIds
@@ -132,7 +134,7 @@ func (uss UserServiceServerImpl) QueryUsers(ctx context.Context, req *usvr.Query
 	return resp, nil
 }
 
-func (uss UserServiceServerImpl) QueryUser(ctx context.Context, req *usvr.QueryUserRequest) (*usvr.QueryUserResponse, error) {
+func (uss UserManagementServerImpl) QueryUser(ctx context.Context, req *usvr.QueryUserRequest) (*usvr.QueryUserResponse, error) {
 	resp := &usvr.QueryUserResponse{}
 
 	userId := req.UserId

@@ -14,7 +14,7 @@ import (
 /*
  @Author: 71made
  @Date: 2023/01/25 12:08
- @ProductName: router.go
+ @ProductName: register.go
  @Description:
 */
 
@@ -22,7 +22,7 @@ import (
 func register(r *server.Hertz) {
 
 	// 静态资源
-	//r.Static("/static", "./resources")
+	//r.Static("/static", "./static")
 
 	root := r.Group("/douyin")
 	// 获取视频流
@@ -31,7 +31,7 @@ func register(r *server.Hertz) {
 		if token := c.Query("token"); len(token) != 0 {
 			jwt.GetInstance().MiddlewareFunc()(ctx, c)
 		}
-	}}, UnsupportedMethod)...)
+	}}, core.Feed)...)
 	{
 		_user := root.Group("/user")
 		// 用户信息
@@ -43,9 +43,9 @@ func register(r *server.Hertz) {
 
 		_publish := root.Group("/publish", jwt.GetInstance().MiddlewareFunc())
 		// 视频投稿
-		_publish.POST("/action/", UnsupportedMethod)
+		_publish.POST("/action/", core.Publish)
 		// 获取视频列表
-		_publish.GET("/list/", UnsupportedMethod)
+		_publish.GET("/list/", core.PublishList)
 
 		_favorite := root.Group("/favorite", func(ctx context.Context, c *app.RequestContext) {
 			// 对于 /list/  接口, 在用户未登陆时也可以请求查看其他用户的喜欢视频列表

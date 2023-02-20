@@ -19,11 +19,16 @@ import (
 
 type User struct {
 	gorm.Model
-	Username      string
-	Password      string
-	Avatar        string
-	FollowCount   int64
-	FollowerCount int64
+	Username           string
+	Password           string
+	Avatar             string
+	BackgroundImage    string
+	Signature          string
+	VideoCount         int64
+	FavoriteCount      int64
+	TotalFavoriteCount int64
+	FollowCount        int64
+	FollowerCount      int64
 }
 
 func (u *User) TableName() string {

@@ -6,10 +6,10 @@ import (
 )
 
 /*
-@Author: 71made
-@Date: 2023/02/15 12:18
-@ProductName: resp.go
-@Description:
+ @Author: 71made
+ @Date: 2023/02/17 22:32
+ @ProductName: resp.go
+ @Description:
 */
 
 func NewErrorResponse(err error) *rpc.BaseResponse {

@@ -18,11 +18,16 @@ func User(u *dal.User) *usvr.User {
 	}
 
 	return &usvr.User{
-		Id:            int64(u.ID),
-		Name:          u.Username,
-		Avatar:        u.Avatar,
-		FollowCount:   u.FollowCount,
-		FollowerCount: u.FollowerCount,
+		Id:                 int64(u.ID),
+		Name:               u.Username,
+		Avatar:             u.Avatar,
+		Signature:          u.Signature,
+		BackgroundImage:    u.BackgroundImage,
+		VideoCount:         u.VideoCount,
+		FavoriteCount:      u.FavoriteCount,
+		TotalFavoriteCount: u.TotalFavoriteCount,
+		FollowCount:        u.FollowCount,
+		FollowerCount:      u.FollowerCount,
 	}
 }
 

@@ -28,7 +28,7 @@
 
 **MinIO**：
 
-- [下载地址](http://www.minio.io)，找教程自建即可（[国内网址](http://www.minio.org.cn/download.shtml#/kubernetes)）。
+- [下载地址](http://www.minio.io)，找教程自建即可。
 
 - 相关配置 （包括运行地址、用户名和密码等）在 pkg/configs/minio.go 中。
   注：使用自建的 MinIO 服务，除基本的用户名、密码等参数配置，还需要修改 ServerAddr 配置：

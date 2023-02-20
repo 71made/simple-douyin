@@ -90,13 +90,13 @@ CREATE TABLE `user_relation`
 
 CREATE TABLE `message`
 (
-    `id`           bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
-    `from_user_id` bigint unsigned NOT NULL COMMENT 'User id',
-    `to_user_id`   bigint unsigned NOT NULL COMMENT 'To user id',
-    `content`      text NOT NULL COMMENT 'Message content',
-    `created_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Message create time',
-    `updated_at`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Message update time',
-    `deleted_at`   timestamp NULL DEFAULT NULL COMMENT 'Message delete time',
+    `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+    `from_user_id`    bigint unsigned NOT NULL COMMENT 'User id',
+    `to_user_id` bigint unsigned NOT NULL COMMENT 'To user id',
+    `content`    text NOT NULL COMMENT 'Message content',
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Message create time',
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Message update time',
+    `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Message delete time',
     PRIMARY KEY (`id`),
     FOREIGN KEY (`from_user_id`) REFERENCES `user`(`id`),
     FOREIGN KEY (`to_user_id`) REFERENCES `user`(`id`),

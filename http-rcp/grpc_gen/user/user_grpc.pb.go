@@ -18,194 +18,194 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// UserServiceClient is the client API for UserService service.
+// UserManagementClient is the client API for UserManagement service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type UserServiceClient interface {
+type UserManagementClient interface {
 	CheckLoginUser(ctx context.Context, in *CheckLoginUserRequest, opts ...grpc.CallOption) (*CheckLoginUserResponse, error)
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	QueryUsers(ctx context.Context, in *QueryUsersRequest, opts ...grpc.CallOption) (*QueryUsersResponse, error)
 	QueryUser(ctx context.Context, in *QueryUserRequest, opts ...grpc.CallOption) (*QueryUserResponse, error)
 }
 
-type userServiceClient struct {
+type userManagementClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
-	return &userServiceClient{cc}
+func NewUserManagementClient(cc grpc.ClientConnInterface) UserManagementClient {
+	return &userManagementClient{cc}
 }
 
-func (c *userServiceClient) CheckLoginUser(ctx context.Context, in *CheckLoginUserRequest, opts ...grpc.CallOption) (*CheckLoginUserResponse, error) {
+func (c *userManagementClient) CheckLoginUser(ctx context.Context, in *CheckLoginUserRequest, opts ...grpc.CallOption) (*CheckLoginUserResponse, error) {
 	out := new(CheckLoginUserResponse)
-	err := c.cc.Invoke(ctx, "/user.UserService/CheckLoginUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserManagement/CheckLoginUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
+func (c *userManagementClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
 	out := new(CreateUserResponse)
-	err := c.cc.Invoke(ctx, "/user.UserService/CreateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserManagement/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) QueryUsers(ctx context.Context, in *QueryUsersRequest, opts ...grpc.CallOption) (*QueryUsersResponse, error) {
+func (c *userManagementClient) QueryUsers(ctx context.Context, in *QueryUsersRequest, opts ...grpc.CallOption) (*QueryUsersResponse, error) {
 	out := new(QueryUsersResponse)
-	err := c.cc.Invoke(ctx, "/user.UserService/QueryUsers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserManagement/QueryUsers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) QueryUser(ctx context.Context, in *QueryUserRequest, opts ...grpc.CallOption) (*QueryUserResponse, error) {
+func (c *userManagementClient) QueryUser(ctx context.Context, in *QueryUserRequest, opts ...grpc.CallOption) (*QueryUserResponse, error) {
 	out := new(QueryUserResponse)
-	err := c.cc.Invoke(ctx, "/user.UserService/QueryUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserManagement/QueryUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// UserServiceServer is the server API for UserService service.
-// All implementations must embed UnimplementedUserServiceServer
+// UserManagementServer is the server API for UserManagement service.
+// All implementations must embed UnimplementedUserManagementServer
 // for forward compatibility
-type UserServiceServer interface {
+type UserManagementServer interface {
 	CheckLoginUser(context.Context, *CheckLoginUserRequest) (*CheckLoginUserResponse, error)
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	QueryUsers(context.Context, *QueryUsersRequest) (*QueryUsersResponse, error)
 	QueryUser(context.Context, *QueryUserRequest) (*QueryUserResponse, error)
-	mustEmbedUnimplementedUserServiceServer()
+	mustEmbedUnimplementedUserManagementServer()
 }
 
-// UnimplementedUserServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedUserServiceServer struct {
+// UnimplementedUserManagementServer must be embedded to have forward compatible implementations.
+type UnimplementedUserManagementServer struct {
 }
 
-func (UnimplementedUserServiceServer) CheckLoginUser(context.Context, *CheckLoginUserRequest) (*CheckLoginUserResponse, error) {
+func (UnimplementedUserManagementServer) CheckLoginUser(context.Context, *CheckLoginUserRequest) (*CheckLoginUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckLoginUser not implemented")
 }
-func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
+func (UnimplementedUserManagementServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedUserServiceServer) QueryUsers(context.Context, *QueryUsersRequest) (*QueryUsersResponse, error) {
+func (UnimplementedUserManagementServer) QueryUsers(context.Context, *QueryUsersRequest) (*QueryUsersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryUsers not implemented")
 }
-func (UnimplementedUserServiceServer) QueryUser(context.Context, *QueryUserRequest) (*QueryUserResponse, error) {
+func (UnimplementedUserManagementServer) QueryUser(context.Context, *QueryUserRequest) (*QueryUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryUser not implemented")
 }
-func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
+func (UnimplementedUserManagementServer) mustEmbedUnimplementedUserManagementServer() {}
 
-// UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to UserServiceServer will
+// UnsafeUserManagementServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UserManagementServer will
 // result in compilation errors.
-type UnsafeUserServiceServer interface {
-	mustEmbedUnimplementedUserServiceServer()
+type UnsafeUserManagementServer interface {
+	mustEmbedUnimplementedUserManagementServer()
 }
 
-func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
-	s.RegisterService(&UserService_ServiceDesc, srv)
+func RegisterUserManagementServer(s grpc.ServiceRegistrar, srv UserManagementServer) {
+	s.RegisterService(&UserManagement_ServiceDesc, srv)
 }
 
-func _UserService_CheckLoginUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserManagement_CheckLoginUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckLoginUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).CheckLoginUser(ctx, in)
+		return srv.(UserManagementServer).CheckLoginUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/user.UserService/CheckLoginUser",
+		FullMethod: "/user.UserManagement/CheckLoginUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).CheckLoginUser(ctx, req.(*CheckLoginUserRequest))
+		return srv.(UserManagementServer).CheckLoginUser(ctx, req.(*CheckLoginUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserManagement_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).CreateUser(ctx, in)
+		return srv.(UserManagementServer).CreateUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/user.UserService/CreateUser",
+		FullMethod: "/user.UserManagement/CreateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
+		return srv.(UserManagementServer).CreateUser(ctx, req.(*CreateUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_QueryUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserManagement_QueryUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryUsersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).QueryUsers(ctx, in)
+		return srv.(UserManagementServer).QueryUsers(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/user.UserService/QueryUsers",
+		FullMethod: "/user.UserManagement/QueryUsers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).QueryUsers(ctx, req.(*QueryUsersRequest))
+		return srv.(UserManagementServer).QueryUsers(ctx, req.(*QueryUsersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_QueryUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserManagement_QueryUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).QueryUser(ctx, in)
+		return srv.(UserManagementServer).QueryUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/user.UserService/QueryUser",
+		FullMethod: "/user.UserManagement/QueryUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).QueryUser(ctx, req.(*QueryUserRequest))
+		return srv.(UserManagementServer).QueryUser(ctx, req.(*QueryUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
+// UserManagement_ServiceDesc is the grpc.ServiceDesc for UserManagement service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "user.UserService",
-	HandlerType: (*UserServiceServer)(nil),
+var UserManagement_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "user.UserManagement",
+	HandlerType: (*UserManagementServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CheckLoginUser",
-			Handler:    _UserService_CheckLoginUser_Handler,
+			Handler:    _UserManagement_CheckLoginUser_Handler,
 		},
 		{
 			MethodName: "CreateUser",
-			Handler:    _UserService_CreateUser_Handler,
+			Handler:    _UserManagement_CreateUser_Handler,
 		},
 		{
 			MethodName: "QueryUsers",
-			Handler:    _UserService_QueryUsers_Handler,
+			Handler:    _UserManagement_QueryUsers_Handler,
 		},
 		{
 			MethodName: "QueryUser",
-			Handler:    _UserService_QueryUser_Handler,
+			Handler:    _UserManagement_QueryUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
