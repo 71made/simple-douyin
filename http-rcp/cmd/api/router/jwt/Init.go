@@ -35,7 +35,7 @@ func Init() {
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
 			return &biz.User{
-				Id: int64(claims[configs.IdentityKey].(float64)),
+				BaseUser: &biz.BaseUser{Id: int64(claims[configs.IdentityKey].(float64))},
 			}
 		},
 		PayloadFunc: func(data interface{}) jwt.MapClaims {

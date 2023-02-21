@@ -74,9 +74,9 @@ func register(r *server.Hertz) {
 			}
 		})
 		// 发表评论
-		_comment.POST("/action/", UnsupportedMethod)
+		_comment.POST("/action/", first.CommentAction)
 		// 评论列表
-		_comment.GET("/list/", UnsupportedMethod)
+		_comment.GET("/list/", first.GetCommentList)
 
 		_relation := root.Group("/relation", func(ctx context.Context, c *app.RequestContext) {
 			// 对于 /follow/list/ 和 /follower/list/ 接口, 在用户未登陆时也可以请求查看其他用户的关注和粉丝列表

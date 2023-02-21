@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc/grpclog"
 	"net"
-	"simple-main/http-rcp/cmd/favorite/dal/db"
+	"simple-main/http-rcp/cmd/comment/dal/db"
 	"simple-main/http-rcp/pkg/configs"
 	"simple-main/http-rcp/pkg/utils"
 	"simple-main/http-rcp/pkg/utils/etcd"
@@ -14,7 +14,7 @@ import (
 
 /*
  @Author: 71made
- @Date: 2023/02/21 01:51
+ @Date: 2023/02/21 17:37
  @ProductName: main.go
  @Description:
 */
@@ -28,7 +28,7 @@ func main() {
 	preInit()
 
 	var port int
-	flag.IntVar(&port, "port", configs.FavoriteServerPort, "port")
+	flag.IntVar(&port, "port", configs.CommentServerPort, "port")
 	flag.Parse()
 	addr := fmt.Sprintf("%s:%d", configs.ServerIP, port)
 
@@ -37,21 +37,21 @@ func main() {
 		panic(err)
 	}
 
-	etcdClient, err := etcd.Register(configs.FavoriteServerName, addr)
+	etcdClient, err := etcd.Register(configs.CommentServerName, addr)
 	if err != nil {
-		grpclog.Fatal("Favorite grpc server register to ETCD failed: ", err)
+		grpclog.Fatal("Comment grpc server register to ETCD failed: ", err)
 	}
 
 	utils.DealSignal(func() {
 		// 注销注册
-		_ = etcd.Unregister(etcdClient, configs.FavoriteServerName, addr)
+		_ = etcd.Unregister(etcdClient, configs.CommentServerName, addr)
 	})
 
 	svr := newServer()
-	grpclog.Info("Running favorite grpc server...")
+	grpclog.Info("Running comment grpc server...")
 	err = svr.Serve(listen)
 	if err != nil {
-		grpclog.Fatal("Favorite grpc server start failed: ", err)
+		grpclog.Fatal("Comment grpc server start failed: ", err)
 		return
 	}
 }

@@ -15,12 +15,14 @@ const (
 	UserServerPort     = 8081
 	VideoServerPort    = 8082
 	FavoriteServerPort = 8083
+	CommentServerPort  = 8084
 )
 
 const (
 	UserServer     = "user"
 	VideoServer    = "video"
 	FavoriteServer = "favorite"
+	CommentServer  = "comment"
 )
 
 const (

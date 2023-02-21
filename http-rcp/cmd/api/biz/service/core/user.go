@@ -4,6 +4,7 @@ import (
 	"context"
 	"mime/multipart"
 	"simple-main/http-rcp/cmd/api/biz"
+	"simple-main/http-rcp/cmd/api/biz/pack"
 	"simple-main/http-rcp/cmd/api/rpc"
 	"simple-main/http-rcp/pkg/configs"
 )
@@ -117,13 +118,6 @@ func (us *userServiceImpl) UserInfo(ctx context.Context, userId, thisUserId int6
 	}
 
 	resp.Response = biz.NewSuccessResponse("获取用户信息成功")
-	resp.User = &biz.User{
-		Id:            userId,
-		Name:          user.Name,
-		AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-		FollowCount:   user.FollowCount,
-		FollowerCount: user.FollowerCount,
-		IsFollow:      isFollow,
-	}
+	resp.User = pack.BizUser(user, isFollow)
 	return
 }

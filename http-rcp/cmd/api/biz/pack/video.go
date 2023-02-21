@@ -6,7 +6,6 @@ import (
 	"simple-main/http-rcp/cmd/api/biz"
 	"simple-main/http-rcp/cmd/api/rpc"
 	vsvr "simple-main/http-rcp/grpc_gen/video"
-	"simple-main/http-rcp/pkg/configs"
 	"sync"
 )
 
@@ -97,15 +96,7 @@ func BizVideos(ctx context.Context, videos []*vsvr.Video, userId int64) ([]*biz.
 			QUserErr = errors.New(baseResp.StatusMsg)
 		}
 		for _, user := range users {
-			author := &biz.User{
-				Id:            user.Id,
-				Name:          user.Name,
-				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-				WorkCount:     user.VideoCount,
-				LikeCount:     user.FavoriteCount,
-				FollowCount:   user.FollowCount,
-				FollowerCount: user.FollowerCount,
-			}
+			author := BizUser(user, false) // 先默认为false
 			authors[user.Id] = author
 		}
 	}()
@@ -121,7 +112,7 @@ func BizVideos(ctx context.Context, videos []*vsvr.Video, userId int64) ([]*biz.
 	for i, video := range videos {
 		author := authors[video.AuthorId]
 		author.IsFollow = isFollowMap[video.AuthorId]
-		videoList[i].Author = *author
+		videoList[i].Author = author
 	}
 
 	return videoList, nil

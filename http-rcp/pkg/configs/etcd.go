@@ -25,4 +25,5 @@ const (
 	UserServerName     = ServerNamePrefix + "/" + UserServer
 	VideoServerName    = ServerNamePrefix + "/" + VideoServer
 	FavoriteServerName = ServerNamePrefix + "/" + FavoriteServer
+	CommentServerName  = ServerNamePrefix + "/" + CommentServer
 )

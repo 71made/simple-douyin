@@ -40,7 +40,7 @@ func Init() {
 	}
 
 	// 使用 tracing
-	if err := db.Use(tracing.NewPlugin()); err != nil {
+	if err = db.Use(tracing.NewPlugin()); err != nil {
 		panic(err)
 	}
 }
