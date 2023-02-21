@@ -1,20 +1,18 @@
-package model
+package dal
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"simple-main/simple-http/pkg/common/db"
-	"simple-main/simple-http/pkg/configs"
-	"strings"
+	"simple-main/http-rcp/cmd/favorite/dal/db"
+	"simple-main/http-rcp/pkg/configs"
 	"time"
 )
 
 /*
  @Author: 71made
- @Date: 2023/01/31 16:36
+ @Date: 2023/02/21 01:39
  @ProductName: favorite.go
  @Description:
 */
@@ -52,19 +50,30 @@ func (f *Favorite) GetFavoriteType() uint {
 // BeforeCreate
 // 通过 GORM 提供的 Hook 实现关联更新 video 和 user 记录的 favorite_count
 func (f *Favorite) BeforeCreate(tx *gorm.DB) (err error) {
-	return f.syncUpdateFavoriteCount(tx, gorm.Expr("`favorite_count` + 1"))
+	err = f.syncUpdateFavoriteCount(tx, gorm.Expr("`favorite_count` + 1"))
+	if err != nil {
+		return
+	}
+	return f.syncUpdateAuthorTotalFavoriteCount(tx, gorm.Expr("`total_favorite_count` + 1"))
 }
 
 // BeforeUpdate
 // 同理, 通过 Hook 实现关联更新 video 和 user 记录的 favorite_count
 func (f *Favorite) BeforeUpdate(tx *gorm.DB) (err error) {
-	var expr clause.Expr
+	var fcExpr, tfcExpr clause.Expr
 	if f.IsFavorite() {
-		expr = gorm.Expr("`favorite_count` + 1")
+		fcExpr = gorm.Expr("`favorite_count` + 1")
+		tfcExpr = gorm.Expr("`total_favorite_count` + 1")
 	} else {
-		expr = gorm.Expr("`favorite_count` - 1")
+		fcExpr = gorm.Expr("`favorite_count` - 1")
+		tfcExpr = gorm.Expr("`total_favorite_count` - 1")
 	}
-	return f.syncUpdateFavoriteCount(tx, expr)
+
+	err = f.syncUpdateFavoriteCount(tx, fcExpr)
+	if err != nil {
+		return
+	}
+	return f.syncUpdateAuthorTotalFavoriteCount(tx, tfcExpr)
 }
 
 func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
@@ -77,7 +86,7 @@ func (f *Favorite) syncUpdateFavoriteCount(tx *gorm.DB, expr clause.Expr) (err e
 
 func (f *Favorite) syncUpdateVideoFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
 
-	updateRes := tx.Model(&Video{}).Where("id = ?", f.VideoId).
+	updateRes := tx.Table(configs.VideoTable).Where("id = ?", f.VideoId).
 		Update("favorite_count", expr)
 	if err = updateRes.Error; err != nil {
 		return err
@@ -94,7 +103,7 @@ func (f *Favorite) syncUpdateVideoFavoriteCount(tx *gorm.DB, expr clause.Expr) (
 }
 
 func (f *Favorite) syncUpdateUserFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
-	updateRes := tx.Model(&User{}).Where("id = ?", f.UserId).
+	updateRes := tx.Table(configs.UserTable).Where("id = ?", f.UserId).
 		Update("favorite_count", expr)
 	if err = updateRes.Error; err != nil {
 		return err
@@ -109,8 +118,33 @@ func (f *Favorite) syncUpdateUserFavoriteCount(tx *gorm.DB, expr clause.Expr) (e
 	return nil
 }
 
-func CreateFavorite(ctx context.Context, f *Favorite) error {
+func (f *Favorite) syncUpdateAuthorTotalFavoriteCount(tx *gorm.DB, expr clause.Expr) (err error) {
+	var authorId uint
+	if err = tx.Table(configs.VideoTable).
+		Select("author_id").
+		Where("id = ?", f.VideoId).
+		Take(&authorId).Error; err != nil {
+		// 此处当没找到记录需要抛出错误回滚事务
+		return err
+	}
 
+	updateRes := tx.Table(configs.UserTable).Where("id = ?", authorId).
+		Update("total_favorite_count", expr)
+	if err = updateRes.Error; err != nil {
+		return err
+	}
+	if updateRes.RowsAffected <= 0 {
+		return errors.New("update user record fail")
+	}
+	if updateRes.RowsAffected > 1 {
+		// 做兜底处理
+		return errors.New("user table records is dirty")
+	}
+	return nil
+
+}
+
+func CreateFavorite(ctx context.Context, f *Favorite) error {
 	return db.GetInstance().WithContext(ctx).Create(f).Error
 }
 
@@ -152,8 +186,8 @@ func QueryFavorite(ctx context.Context, userId, videoId int64) (*Favorite, error
 	return &res[0], nil
 }
 
-func QueryFavorites(ctx context.Context, userId int64, videoIds []int64) ([]Favorite, error) {
-	res := make([]Favorite, 0)
+func QueryFavorites(ctx context.Context, userId int64, videoIds []int64) ([]*Favorite, error) {
+	res := make([]*Favorite, 0)
 
 	if len(videoIds) == 0 {
 		return res, nil
@@ -169,31 +203,20 @@ func QueryFavorites(ctx context.Context, userId int64, videoIds []int64) ([]Favo
 	return res, nil
 }
 
-func QueryFavoriteVideos(ctx context.Context, userId int64) ([]Video, error) {
-	videoIds := make([]int64, 0)
+func QueryUserFavorites(ctx context.Context, userId int64) ([]*Favorite, error) {
+	res := make([]*Favorite, 0)
 	if err := db.GetInstance().WithContext(ctx).
-		Select("video_id").Model(&Favorite{}).
+		Model(&Favorite{}).
 		Where("user_id = ?", userId).
 		Where("is_favorite = ?", Favorable).
 		Order("updated_at DESC").
-		Find(&videoIds).Error; err != nil {
-		return nil, err
-	}
-
-	if len(videoIds) == 0 {
-		return make([]Video, 0), nil
-	}
-
-	res := make([]Video, len(videoIds))
-	// 构造排序条件
-	str := strings.ReplaceAll(fmt.Sprintf("%v", videoIds), " ", ",")
-	// 截取中间 id 序列
-	str = str[1 : len(str)-1]
-	if err := db.GetInstance().WithContext(ctx).
-		Model(&Video{}).Where("id in ?", videoIds).
-		Order("Field(id," + str + ")").
 		Find(&res).Error; err != nil {
 		return nil, err
 	}
+
+	if len(res) == 0 {
+		return make([]*Favorite, 0), nil
+	}
+
 	return res, nil
 }

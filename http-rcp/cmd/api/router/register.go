@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"simple-main/http-rcp/cmd/api/biz"
 	"simple-main/http-rcp/cmd/api/biz/handler/core"
+	"simple-main/http-rcp/cmd/api/biz/handler/extra/first"
 	"simple-main/http-rcp/cmd/api/router/jwt"
 	"strings"
 )
@@ -58,9 +59,9 @@ func register(r *server.Hertz) {
 			}
 		})
 		// 视频点赞/取消点赞
-		_favorite.POST("/action/", UnsupportedMethod)
+		_favorite.POST("/action/", first.FavoriteAction)
 		// 喜欢视频列表
-		_favorite.GET("/list/", UnsupportedMethod)
+		_favorite.GET("/list/", first.GetFavoriteList)
 
 		_comment := root.Group("/comment", func(ctx context.Context, c *app.RequestContext) {
 			// 对于 /list/  接口, 在用户未登陆时也可以请求查看视频的评论列表

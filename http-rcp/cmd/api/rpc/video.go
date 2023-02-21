@@ -72,9 +72,34 @@ func QueryVideosByUserId(ctx context.Context, userId int64) ([]*vsvr.Video, *biz
 	return resp.VideoList, NewBizResponse(resp.BaseResponse)
 }
 
-func QueryVideosByIds(ctx context.Context, videoIds []int64) ([]*vsvr.Video, *biz.Response) {
-	req := &vsvr.QueryVideosRequest{
-		VideoIds: videoIds,
+//func QueryVideosByIds(ctx context.Context, videoIds []int64) ([]*vsvr.Video, *biz.Response) {
+//	req := &vsvr.QueryVideosRequest{
+//		VideoIds: videoIds,
+//	}
+//
+//	client, err := videoManagementClient()
+//	if err != nil {
+//		hlog.Error(err)
+//		return make([]*vsvr.Video, 0), biz.NewErrorResponse(err)
+//	}
+//
+//	resp, err := client.QueryVideos(ctx, req)
+//	if err != nil {
+//		hlog.Error(err)
+//		return make([]*vsvr.Video, 0), biz.NewErrorResponse(err)
+//	}
+//
+//	if resp.BaseResponse != nil && resp.BaseResponse.StatusCode != rpc.Status_OK {
+//		return make([]*vsvr.Video, 0), NewBizResponse(resp.BaseResponse)
+//	}
+//
+//	return resp.VideoList, NewBizResponse(resp.BaseResponse)
+//}
+
+func QueryFeedVideos(ctx context.Context, limit int, lastTime int64) ([]*vsvr.Video, *biz.Response) {
+	req := &vsvr.QueryFeedVideosRequest{
+		Limit:    int32(limit),
+		LastTime: lastTime,
 	}
 
 	client, err := videoManagementClient()
@@ -83,7 +108,7 @@ func QueryVideosByIds(ctx context.Context, videoIds []int64) ([]*vsvr.Video, *bi
 		return make([]*vsvr.Video, 0), biz.NewErrorResponse(err)
 	}
 
-	resp, err := client.QueryVideos(ctx, req)
+	resp, err := client.QueryFeedVideos(ctx, req)
 	if err != nil {
 		hlog.Error(err)
 		return make([]*vsvr.Video, 0), biz.NewErrorResponse(err)
@@ -96,10 +121,9 @@ func QueryVideosByIds(ctx context.Context, videoIds []int64) ([]*vsvr.Video, *bi
 	return resp.VideoList, NewBizResponse(resp.BaseResponse)
 }
 
-func QueryFeedVideos(ctx context.Context, limit int, lastTime int64) ([]*vsvr.Video, *biz.Response) {
-	req := &vsvr.QueryFeedVideoRequest{
-		Limit:    int32(limit),
-		LastTime: lastTime,
+func QueryFavoriteVideos(ctx context.Context, userId int64) ([]*vsvr.Video, *biz.Response) {
+	req := &vsvr.QueryFavoriteVideosRequest{
+		UserId: userId,
 	}
 
 	client, err := videoManagementClient()
@@ -108,7 +132,7 @@ func QueryFeedVideos(ctx context.Context, limit int, lastTime int64) ([]*vsvr.Vi
 		return make([]*vsvr.Video, 0), biz.NewErrorResponse(err)
 	}
 
-	resp, err := client.QueryFeedVideos(ctx, req)
+	resp, err := client.QueryFavoriteVideos(ctx, req)
 	if err != nil {
 		hlog.Error(err)
 		return make([]*vsvr.Video, 0), biz.NewErrorResponse(err)

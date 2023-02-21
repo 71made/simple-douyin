@@ -24,7 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type VideoManagementClient interface {
 	CreateVideo(ctx context.Context, in *CreateVideoRequest, opts ...grpc.CallOption) (*CreateVideoResponse, error)
 	QueryVideos(ctx context.Context, in *QueryVideosRequest, opts ...grpc.CallOption) (*QueryVideosResponse, error)
-	QueryFeedVideos(ctx context.Context, in *QueryFeedVideoRequest, opts ...grpc.CallOption) (*QueryFeedVideosResponse, error)
+	QueryFeedVideos(ctx context.Context, in *QueryFeedVideosRequest, opts ...grpc.CallOption) (*QueryFeedVideosResponse, error)
+	QueryFavoriteVideos(ctx context.Context, in *QueryFavoriteVideosRequest, opts ...grpc.CallOption) (*QueryVideosResponse, error)
 }
 
 type videoManagementClient struct {
@@ -53,9 +54,18 @@ func (c *videoManagementClient) QueryVideos(ctx context.Context, in *QueryVideos
 	return out, nil
 }
 
-func (c *videoManagementClient) QueryFeedVideos(ctx context.Context, in *QueryFeedVideoRequest, opts ...grpc.CallOption) (*QueryFeedVideosResponse, error) {
+func (c *videoManagementClient) QueryFeedVideos(ctx context.Context, in *QueryFeedVideosRequest, opts ...grpc.CallOption) (*QueryFeedVideosResponse, error) {
 	out := new(QueryFeedVideosResponse)
 	err := c.cc.Invoke(ctx, "/video.VideoManagement/QueryFeedVideos", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *videoManagementClient) QueryFavoriteVideos(ctx context.Context, in *QueryFavoriteVideosRequest, opts ...grpc.CallOption) (*QueryVideosResponse, error) {
+	out := new(QueryVideosResponse)
+	err := c.cc.Invoke(ctx, "/video.VideoManagement/QueryFavoriteVideos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +78,8 @@ func (c *videoManagementClient) QueryFeedVideos(ctx context.Context, in *QueryFe
 type VideoManagementServer interface {
 	CreateVideo(context.Context, *CreateVideoRequest) (*CreateVideoResponse, error)
 	QueryVideos(context.Context, *QueryVideosRequest) (*QueryVideosResponse, error)
-	QueryFeedVideos(context.Context, *QueryFeedVideoRequest) (*QueryFeedVideosResponse, error)
+	QueryFeedVideos(context.Context, *QueryFeedVideosRequest) (*QueryFeedVideosResponse, error)
+	QueryFavoriteVideos(context.Context, *QueryFavoriteVideosRequest) (*QueryVideosResponse, error)
 	mustEmbedUnimplementedVideoManagementServer()
 }
 
@@ -82,8 +93,11 @@ func (UnimplementedVideoManagementServer) CreateVideo(context.Context, *CreateVi
 func (UnimplementedVideoManagementServer) QueryVideos(context.Context, *QueryVideosRequest) (*QueryVideosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryVideos not implemented")
 }
-func (UnimplementedVideoManagementServer) QueryFeedVideos(context.Context, *QueryFeedVideoRequest) (*QueryFeedVideosResponse, error) {
+func (UnimplementedVideoManagementServer) QueryFeedVideos(context.Context, *QueryFeedVideosRequest) (*QueryFeedVideosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryFeedVideos not implemented")
+}
+func (UnimplementedVideoManagementServer) QueryFavoriteVideos(context.Context, *QueryFavoriteVideosRequest) (*QueryVideosResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryFavoriteVideos not implemented")
 }
 func (UnimplementedVideoManagementServer) mustEmbedUnimplementedVideoManagementServer() {}
 
@@ -135,7 +149,7 @@ func _VideoManagement_QueryVideos_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _VideoManagement_QueryFeedVideos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFeedVideoRequest)
+	in := new(QueryFeedVideosRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -147,7 +161,25 @@ func _VideoManagement_QueryFeedVideos_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/video.VideoManagement/QueryFeedVideos",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VideoManagementServer).QueryFeedVideos(ctx, req.(*QueryFeedVideoRequest))
+		return srv.(VideoManagementServer).QueryFeedVideos(ctx, req.(*QueryFeedVideosRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VideoManagement_QueryFavoriteVideos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryFavoriteVideosRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoManagementServer).QueryFavoriteVideos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/video.VideoManagement/QueryFavoriteVideos",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoManagementServer).QueryFavoriteVideos(ctx, req.(*QueryFavoriteVideosRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -170,6 +202,10 @@ var VideoManagement_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryFeedVideos",
 			Handler:    _VideoManagement_QueryFeedVideos_Handler,
+		},
+		{
+			MethodName: "QueryFavoriteVideos",
+			Handler:    _VideoManagement_QueryFavoriteVideos_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

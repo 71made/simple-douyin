@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package video;
+
+import "idl/rpc.proto";
+
+option go_package = "simple-main/http-rcp/grpc_gen/favorite;favorite";
+
+message Favorite {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 video_id = 3;
+  bool is_favorite = 4;
+}
+
+enum Action {
+  Unknown = 0;
+  Commit = 1;
+  Cancel = 2;
+}
+
+message FavoriteActionRequest {
+  Action type = 1;
+  int64 user_id = 2;
+  int64 video_id = 3;
+}
+
+message FavoriteActionResponse {
+  rpc.BaseResponse base_response = 1;
+}
+
+message QueryFavoritesRequest {
+  int64 user_id = 1; // 上送 userId 和 videoIds 代表查询该用户与此列表视频的点赞关系
+  repeated int64 video_ids = 2; // 只上送 userId, videoIds 为空则代表查询用户所有的点赞视频
+}
+
+message QueryFavoritesResponse {
+  repeated Favorite favorite_list = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+service FavoriteManagement {
+
+  rpc Action(FavoriteActionRequest) returns (FavoriteActionResponse) {}
+
+  rpc QueryFavorites(QueryFavoritesRequest) returns (QueryFavoritesResponse) {}
+}
+
+

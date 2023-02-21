@@ -32,7 +32,7 @@ type UserManagementServerImpl struct {
 	usvr.UnimplementedUserManagementServer
 }
 
-func (uss UserManagementServerImpl) CheckLoginUser(ctx context.Context, req *usvr.CheckLoginUserRequest) (*usvr.CheckLoginUserResponse, error) {
+func (ums UserManagementServerImpl) CheckLoginUser(ctx context.Context, req *usvr.CheckLoginUserRequest) (*usvr.CheckLoginUserResponse, error) {
 	resp := &usvr.CheckLoginUserResponse{}
 
 	username := req.Username
@@ -64,7 +64,7 @@ func (uss UserManagementServerImpl) CheckLoginUser(ctx context.Context, req *usv
 	}, nil
 }
 
-func (uss UserManagementServerImpl) CreateUser(ctx context.Context, req *usvr.CreateUserRequest) (*usvr.CreateUserResponse, error) {
+func (ums UserManagementServerImpl) CreateUser(ctx context.Context, req *usvr.CreateUserRequest) (*usvr.CreateUserResponse, error) {
 	resp := &usvr.CreateUserResponse{}
 
 	found, err := dal.IsExistUser(ctx, req.Username)
@@ -111,7 +111,7 @@ func (uss UserManagementServerImpl) CreateUser(ctx context.Context, req *usvr.Cr
 	return resp, nil
 }
 
-func (uss UserManagementServerImpl) QueryUsers(ctx context.Context, req *usvr.QueryUsersRequest) (*usvr.QueryUsersResponse, error) {
+func (ums UserManagementServerImpl) QueryUsers(ctx context.Context, req *usvr.QueryUsersRequest) (*usvr.QueryUsersResponse, error) {
 	resp := &usvr.QueryUsersResponse{}
 
 	userIds := req.UserIds
@@ -134,7 +134,7 @@ func (uss UserManagementServerImpl) QueryUsers(ctx context.Context, req *usvr.Qu
 	return resp, nil
 }
 
-func (uss UserManagementServerImpl) QueryUser(ctx context.Context, req *usvr.QueryUserRequest) (*usvr.QueryUserResponse, error) {
+func (ums UserManagementServerImpl) QueryUser(ctx context.Context, req *usvr.QueryUserRequest) (*usvr.QueryUserResponse, error) {
 	resp := &usvr.QueryUserResponse{}
 
 	userId := req.UserId

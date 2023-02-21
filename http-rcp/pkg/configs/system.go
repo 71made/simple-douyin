@@ -12,13 +12,15 @@ const ServerIP = "127.0.0.1"
 
 // 各微服务端口配置
 const (
-	UserServerPort  = 8081
-	VideoServerPort = 8082
+	UserServerPort     = 8081
+	VideoServerPort    = 8082
+	FavoriteServerPort = 8083
 )
 
 const (
-	UserServer  = "user"
-	VideoServer = "video"
+	UserServer     = "user"
+	VideoServer    = "video"
+	FavoriteServer = "favorite"
 )
 
 const (

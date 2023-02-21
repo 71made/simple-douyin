@@ -15,12 +15,14 @@ const EtcdPort = ":2379"
 const EtcdURL = ServerAddrPrefix + EtcdPort
 const EtcdDialTimeout = 5 * time.Second
 const EtcdTTL = 10
+
 const (
 	ServerNamePrefix = "douyin"
 	ServerAddrPrefix = HTTP + "://" + ServerIP
 )
 
 const (
-	UserServerName  = ServerNamePrefix + "/" + UserServer
-	VideoServerName = ServerNamePrefix + "/" + VideoServer
+	UserServerName     = ServerNamePrefix + "/" + UserServer
+	VideoServerName    = ServerNamePrefix + "/" + VideoServer
+	FavoriteServerName = ServerNamePrefix + "/" + FavoriteServer
 )

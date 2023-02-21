@@ -61,6 +61,7 @@ func BizVideos(ctx context.Context, videos []*vsvr.Video, userId int64) ([]*biz.
 	var wg sync.WaitGroup
 	wg.Add(1) // 后续查询 authors 实体的并发任务
 
+	wg.Add(1)
 	//// 对于已登陆用户, 需要查询用户对应的关注和点赞情况
 	//if userId != biz.NotLoginUserId {
 	//	wg.Add(2) // 接下来查询关注和点赞的并发任务
@@ -75,16 +76,16 @@ func BizVideos(ctx context.Context, videos []*vsvr.Video, userId int64) ([]*biz.
 	//		wg.Done()
 	//	}()
 	//
-	//	go func() {
-	//		// 查询是否点赞
-	//		favorites, _ := model.QueryFavorites(ctx, userId, videoIds)
-	//
-	//		for _, favorite := range favorites {
-	//			video := videoMap[favorite.VideoId]
-	//			video.IsFavorite = favorite.IsFavorite()
-	//		}
-	//		wg.Done()
-	//	}()
+	go func() {
+		// 查询是否点赞
+		favorites, _ := rpc.QueryFavorites(ctx, userId, videoIds)
+
+		for _, favorite := range favorites {
+			video := videoMap[favorite.VideoId]
+			video.IsFavorite = favorite.IsFavorite
+		}
+		wg.Done()
+	}()
 	//
 	//}
 	var QUserErr error

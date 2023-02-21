@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"simple-main/http-rcp/cmd/video/dal"
 	"simple-main/http-rcp/cmd/video/pack"
+	srpc "simple-main/http-rcp/cmd/video/rpc"
+	rpc "simple-main/http-rcp/grpc_gen"
 	vsvr "simple-main/http-rcp/grpc_gen/video"
 	"simple-main/http-rcp/pkg/configs"
 	"simple-main/http-rcp/pkg/utils/minio"
@@ -35,7 +37,7 @@ type VideoManagementServer struct {
 	vsvr.UnimplementedVideoManagementServer
 }
 
-func (vss VideoManagementServer) CreateVideo(ctx context.Context, req *vsvr.CreateVideoRequest) (*vsvr.CreateVideoResponse, error) {
+func (vms VideoManagementServer) CreateVideo(ctx context.Context, req *vsvr.CreateVideoRequest) (*vsvr.CreateVideoResponse, error) {
 	resp := &vsvr.CreateVideoResponse{}
 	found, _ := dal.IsExistVideo(ctx, req.AuthorId, req.Title)
 	if found {
@@ -130,7 +132,7 @@ func (vss VideoManagementServer) CreateVideo(ctx context.Context, req *vsvr.Crea
 	return resp, nil
 }
 
-func (vss VideoManagementServer) QueryVideos(ctx context.Context, req *vsvr.QueryVideosRequest) (*vsvr.QueryVideosResponse, error) {
+func (vms VideoManagementServer) QueryVideos(ctx context.Context, req *vsvr.QueryVideosRequest) (*vsvr.QueryVideosResponse, error) {
 
 	// 内部抽取处理函数
 	packQueryRes := func(videos []*dal.Video, err error) *vsvr.QueryVideosResponse {
@@ -160,7 +162,7 @@ func (vss VideoManagementServer) QueryVideos(ctx context.Context, req *vsvr.Quer
 	return packQueryRes(make([]*dal.Video, 0), errors.New("请求服务参数异常缺失")), nil
 }
 
-func (vss VideoManagementServer) QueryFeedVideos(ctx context.Context, req *vsvr.QueryFeedVideoRequest) (*vsvr.QueryFeedVideosResponse, error) {
+func (vms VideoManagementServer) QueryFeedVideos(ctx context.Context, req *vsvr.QueryFeedVideosRequest) (*vsvr.QueryFeedVideosResponse, error) {
 	resp := &vsvr.QueryFeedVideosResponse{}
 
 	videos, err := dal.QueryVideos(ctx, dal.PageAfter(req.LastTime), dal.PageLimit(int(req.Limit)))
@@ -173,6 +175,35 @@ func (vss VideoManagementServer) QueryFeedVideos(ctx context.Context, req *vsvr.
 
 	resp.VideoList = pack.Videos(videos)
 	resp.BaseResponse = pack.NewSuccessResponse("获取成功")
+	return resp, nil
+}
+
+func (vms VideoManagementServer) QueryFavoriteVideos(ctx context.Context, req *vsvr.QueryFavoriteVideosRequest) (*vsvr.QueryVideosResponse, error) {
+	resp := &vsvr.QueryVideosResponse{}
+
+	favorites, baseResp := srpc.QueryUserFavorites(ctx, req.UserId)
+
+	if baseResp != nil && baseResp.StatusCode != rpc.Status_OK {
+		resp.BaseResponse = baseResp
+		resp.VideoList = make([]*vsvr.Video, 0)
+		return resp, nil
+	}
+
+	videoIds := make([]int64, len(favorites))
+	for i, f := range favorites {
+		videoIds[i] = f.VideoId
+	}
+
+	videos, err := dal.QueryVideosById(ctx, videoIds)
+	if err != nil {
+		grpclog.Error(err)
+		resp.BaseResponse = pack.NewErrorResponse(err)
+		resp.VideoList = make([]*vsvr.Video, 0)
+		return resp, nil
+	}
+
+	resp.BaseResponse = pack.NewSuccessResponse("获取成功")
+	resp.VideoList = pack.Videos(videos)
 	return resp, nil
 }
 
