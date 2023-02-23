@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package relation;
+
+import "idl/rpc.proto";
+
+option go_package = "simple-main/http-rcp/grpc_gen/relation;relation";
+
+message Relation {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 follower_id = 3;
+  bool is_following = 4;
+  bool is_friend = 5;
+}
+
+message CreateRelationRequest {
+  int64 user_id = 1;
+  int64 follower_id = 2;
+}
+
+message CreateRelationResponse {
+  rpc.BaseResponse base_response = 1;
+}
+
+enum Action {
+  Unknown = 0;
+  Following    = 1;
+  NotFollowing = 2;
+}
+
+message UpdateRelationRequest {
+  Action action_type = 1;
+  int64 user_id = 2;
+  int64 follower_id = 3;
+}
+
+message UpdateRelationResponse {
+  rpc.BaseResponse base_response = 1;
+}
+
+message QueryRelationRequest {
+  int64 this_user_id = 1;
+  int64 another_user_id = 2;
+}
+
+message QueryRelationResponse {
+  Relation relation = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+message QueryRelationsRequest {
+  int64 this_user_id = 1;
+  repeated int64 to_user_ids = 2; // 上传此参数, 代表查询该用户与此中所有用户的关注/粉丝关系
+  bool friend_relation = 3;
+  bool follow_relation = 4;
+  bool follower_relation = 6;
+}
+
+message QueryRelationsResponse {
+  repeated Relation relation_list = 1;
+  rpc.BaseResponse base_response = 2;
+}
+
+service RelationManagement {
+
+  rpc CreateRelation(CreateRelationRequest) returns (CreateRelationResponse) {}
+
+  rpc UpdateRelation(UpdateRelationRequest) returns (UpdateRelationResponse) {}
+
+  rpc QueryRelation(QueryRelationRequest) returns (QueryRelationResponse) {}
+
+  rpc QueryRelations(QueryRelationsRequest) returns (QueryRelationsResponse) {}
+
+}

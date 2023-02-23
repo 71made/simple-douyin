@@ -17,13 +17,15 @@ const EtcdDialTimeout = 5 * time.Second
 const EtcdTTL = 10
 
 const (
-	ServerNamePrefix = "douyin"
+	ServerNamePrefix = "douyin/"
 	ServerAddrPrefix = HTTP + "://" + ServerIP
 )
 
 const (
-	UserServerName     = ServerNamePrefix + "/" + UserServer
-	VideoServerName    = ServerNamePrefix + "/" + VideoServer
-	FavoriteServerName = ServerNamePrefix + "/" + FavoriteServer
-	CommentServerName  = ServerNamePrefix + "/" + CommentServer
+	UserServerName     = ServerNamePrefix + UserServer
+	VideoServerName    = ServerNamePrefix + VideoServer
+	FavoriteServerName = ServerNamePrefix + FavoriteServer
+	CommentServerName  = ServerNamePrefix + CommentServer
+	RelationServerName = ServerNamePrefix + RelationServer
+	MessageServerName  = ServerNamePrefix + MessagesServer
 )
