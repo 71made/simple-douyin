@@ -19,10 +19,12 @@ func BizBaseUser(u *usvr.User, isFollow bool) *biz.BaseUser {
 	}
 
 	return &biz.BaseUser{
-		Id:        u.Id,
-		Name:      u.Name,
-		AvatarURL: configs.ServerAddr + configs.AvatarURIPrefix + u.Avatar,
-		IsFollow:  isFollow,
+		Id:              u.Id,
+		Name:            u.Name,
+		BackgroundImage: u.BackgroundImage,
+		Signature:       u.Signature,
+		AvatarURL:       configs.ServerAddr + configs.AvatarURIPrefix + u.Avatar,
+		IsFollow:        isFollow,
 	}
 }
 
@@ -32,10 +34,11 @@ func BizUser(u *usvr.User, isFollow bool) *biz.User {
 	}
 
 	return &biz.User{
-		BaseUser:      BizBaseUser(u, isFollow),
-		WorkCount:     u.VideoCount,
-		LikeCount:     u.FavoriteCount,
-		FollowCount:   u.FollowCount,
-		FollowerCount: u.FollowerCount,
+		BaseUser:           BizBaseUser(u, isFollow),
+		WorkCount:          u.VideoCount,
+		FavoriteCount:      u.FavoriteCount,
+		TotalFavoriteCount: u.TotalFavoriteCount,
+		FollowCount:        u.FollowCount,
+		FollowerCount:      u.FollowerCount,
 	}
 }

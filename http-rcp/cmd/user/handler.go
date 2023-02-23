@@ -100,6 +100,14 @@ func (ums UserManagementServer) CreateUser(ctx context.Context, req *usvr.Create
 		user.Avatar = configs.EmptyAvatarName
 	}
 
+	if len(user.BackgroundImage) == 0 {
+		user.BackgroundImage = configs.EmptyCoverName
+	}
+
+	if len(user.Signature) == 0 {
+		user.Signature = "Ta 很神秘～"
+	}
+
 	if err = dal.CreateUser(ctx, user); err != nil {
 		grpclog.Error(err)
 		resp.BaseResponse = pack.NewErrorResponse(err)

@@ -50,7 +50,7 @@ func Init() {
 			handler.UserLogin(ctx, c)
 			resp, found := c.Get("resp")
 			loginResp := resp.(*service.UserLoginResponse)
-			if found && loginResp.StatusCode == 0 {
+			if found && loginResp.StatusCode == biz.SuccessCode {
 				return loginResp.UserId, nil
 			}
 			return nil, jwt.ErrFailedAuthentication

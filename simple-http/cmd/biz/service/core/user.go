@@ -148,14 +148,17 @@ func (us *userServiceImpl) UserInfo(ctx context.Context, userId, thisUserId int6
 
 	resp.Response = *biz.NewSuccessResponse("获取用户信息成功")
 	resp.User = &biz.User{
-		Id:            userId,
-		Name:          user.Username,
-		AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-		FollowCount:   user.FollowCount,
-		FollowerCount: user.FollowerCount,
-		WorkCount:     user.VideoCount,
-		LikeCount:     user.FavoriteCount,
-		IsFollow:      isFollow,
+		Id:                 userId,
+		Name:               user.Username,
+		AvatarURL:          configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+		FollowCount:        user.FollowCount,
+		FollowerCount:      user.FollowerCount,
+		WorkCount:          user.VideoCount,
+		BackgroundImage:    user.BackgroundImage,
+		Signature:          user.Signature,
+		FavoriteCount:      user.FavoriteCount,
+		TotalFavoriteCount: user.TotalFavoriteCount,
+		IsFollow:           isFollow,
 	}
 	return
 }

@@ -67,12 +67,15 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 
 // UserRegister
 // @router /douyin/user/register/ [POST]
+// 注意: 使用 JWT 中间件后, 不直接返回响应结果, 而是通过后续的 app.HandlerFunc 中
+// 去调用 JWT 提供的函数生成 token 一起响应返回
 func UserRegister(ctx context.Context, c *app.RequestContext) {
 	username := c.Query("username")
 	password := c.Query("password")
 
 	if len(username) == 0 || len(password) == 0 {
-		c.JSON(http.StatusBadRequest, biz.NewFailureResponse("用户名或密码不能为空"))
+		c.Set("status", http.StatusOK)
+		c.Set("resp", biz.NewFailureResponse("用户名或密码不能为空"))
 		return
 	}
 
@@ -83,5 +86,6 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 			Password: password,
 		})
 
-	c.JSON(http.StatusOK, resp)
+	c.Set("status", http.StatusOK)
+	c.Set("resp", resp)
 }

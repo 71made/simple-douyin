@@ -126,13 +126,16 @@ func (cs *commentServiceImpl) CommentList(ctx context.Context, thisUserId, video
 		}
 		for _, user := range users {
 			userMap[user.ID] = &biz.User{
-				Id:            int64(user.ID),
-				Name:          user.Username,
-				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-				WorkCount:     user.VideoCount,
-				LikeCount:     user.FavoriteCount,
-				FollowCount:   user.FollowCount,
-				FollowerCount: user.FollowerCount,
+				Id:                 int64(user.ID),
+				Name:               user.Username,
+				AvatarURL:          configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+				WorkCount:          user.VideoCount,
+				BackgroundImage:    user.BackgroundImage,
+				Signature:          user.Signature,
+				FavoriteCount:      user.FavoriteCount,
+				TotalFavoriteCount: user.TotalFavoriteCount,
+				FollowCount:        user.FollowCount,
+				FollowerCount:      user.FollowerCount,
 			}
 		}
 	}()
@@ -214,14 +217,17 @@ func (cs *commentServiceImpl) publishComment(ctx context.Context, req *CommentRe
 			return
 		}
 		user = &biz.User{
-			Id:            int64(u.ID),
-			Name:          u.Username,
-			AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + u.Avatar,
-			WorkCount:     u.VideoCount,
-			LikeCount:     u.FavoriteCount,
-			FollowCount:   u.FollowCount,
-			FollowerCount: u.FollowerCount,
-			IsFollow:      false, // 对于用户自己, IsFollow 实际上就是默认的 false
+			Id:                 int64(u.ID),
+			Name:               u.Username,
+			AvatarURL:          configs.ServerAddr + configs.AvatarURIPrefix + u.Avatar,
+			WorkCount:          u.VideoCount,
+			BackgroundImage:    u.BackgroundImage,
+			Signature:          u.Signature,
+			FavoriteCount:      u.FavoriteCount,
+			TotalFavoriteCount: u.TotalFavoriteCount,
+			FollowCount:        u.FollowCount,
+			FollowerCount:      u.FollowerCount,
+			IsFollow:           false, // 对于用户自己, IsFollow 实际上就是默认的 false
 		}
 	}()
 

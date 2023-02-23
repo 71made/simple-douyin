@@ -220,14 +220,17 @@ func (rs *relationServiceImpl) transToUsers(ctx context.Context, relations []mod
 
 	for i, user := range users {
 		userList[i] = biz.User{
-			Id:            int64(user.ID),
-			Name:          user.Username,
-			AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-			WorkCount:     user.VideoCount,
-			LikeCount:     user.FavoriteCount,
-			FollowCount:   user.FollowCount,
-			FollowerCount: user.FollowerCount,
-			IsFollow:      isFollowMap[user.ID],
+			Id:                 int64(user.ID),
+			Name:               user.Username,
+			AvatarURL:          configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+			WorkCount:          user.VideoCount,
+			BackgroundImage:    user.BackgroundImage,
+			Signature:          user.Signature,
+			FavoriteCount:      user.FavoriteCount,
+			TotalFavoriteCount: user.TotalFavoriteCount,
+			FollowCount:        user.FollowCount,
+			FollowerCount:      user.FollowerCount,
+			IsFollow:           isFollowMap[user.ID],
 		}
 	}
 
@@ -278,14 +281,17 @@ func (rs *relationServiceImpl) transToFriendUsers(ctx context.Context, relations
 			// 朋友列表中必定是已关注用户, 直接设置 IsFollow 为 true
 			// 但不一定是互关用户, 可以存在对方已经取消关注
 			User: biz.User{
-				Id:            int64(user.ID),
-				Name:          user.Username,
-				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-				FollowCount:   user.FollowCount,
-				FollowerCount: user.FollowerCount,
-				WorkCount:     user.VideoCount,
-				LikeCount:     user.FavoriteCount,
-				IsFollow:      true,
+				Id:                 int64(user.ID),
+				Name:               user.Username,
+				AvatarURL:          configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+				WorkCount:          user.VideoCount,
+				BackgroundImage:    user.BackgroundImage,
+				Signature:          user.Signature,
+				FavoriteCount:      user.FavoriteCount,
+				TotalFavoriteCount: user.TotalFavoriteCount,
+				FollowCount:        user.FollowCount,
+				FollowerCount:      user.FollowerCount,
+				IsFollow:           true,
 			},
 		}
 		userMap[user.ID] = &userList[i]

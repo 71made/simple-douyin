@@ -66,17 +66,21 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 
 // UserRegister
 // @router /douyin/user/register/ [POST]
+// 注意: 使用 JWT 中间件后, 不直接返回响应结果, 而是通过后续的 app.HandlerFunc 中
+// 去调用 JWT 提供的函数生成 token 一起响应返回
 func UserRegister(ctx context.Context, c *app.RequestContext) {
 	req := &service.UserRegisterRequest{}
 
 	err := c.BindAndValidate(req)
 	if err != nil {
 		hlog.Error(err)
-		c.JSON(http.StatusBadRequest, biz.NewErrorResponse(fmt.Errorf("参数绑定失败")))
+		c.Set("status", http.StatusBadRequest)
+		c.Set("resp", biz.NewErrorResponse(fmt.Errorf("参数绑定失败")))
 		return
 	}
 
 	resp := userService.Register(ctx, req)
 
-	c.JSON(http.StatusOK, resp)
+	c.Set("status", http.StatusOK)
+	c.Set("resp", resp)
 }

@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"net/http"
 	"simple-main/simple-http/cmd/biz"
 	"simple-main/simple-http/cmd/biz/handler/core"
 	"simple-main/simple-http/cmd/biz/handler/extra/first"
 	"simple-main/simple-http/cmd/biz/handler/extra/second"
+	service "simple-main/simple-http/cmd/biz/service/core"
 	"simple-main/simple-http/pkg/common/jwt"
 	"strings"
 )
@@ -41,7 +43,27 @@ func Register(r *server.Hertz) {
 		// 登陆, 使用 Hertz 中间价提供的处理方法
 		_user.POST("/login/", jwt.GetInstance().LoginHandler)
 		// 注册
-		_user.POST("/register/", core.UserRegister)
+		_user.POST("/register/", append([]app.HandlerFunc{}, core.UserRegister, func(ctx context.Context, c *app.RequestContext) {
+			resp, found := c.Get("resp")
+			statusCode, _ := c.Get("status")
+			registerResp := resp.(*service.UserLoginResponse)
+			if found && registerResp.StatusCode == biz.SuccessCode {
+				token, _, err := jwt.GetInstance().TokenGenerator(&biz.User{
+					Id: registerResp.UserId,
+				})
+				if err != nil {
+					hlog.Error(err)
+					c.JSON(http.StatusInternalServerError, biz.NewErrorResponse(err))
+					return
+				}
+				registerResp.Token = token
+				c.JSON(http.StatusOK, registerResp)
+				return
+			}
+
+			c.JSON((statusCode).(int), registerResp)
+
+		})...)
 
 		_publish := root.Group("/publish", jwt.GetInstance().MiddlewareFunc())
 		// 视频投稿

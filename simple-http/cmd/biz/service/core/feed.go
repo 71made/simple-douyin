@@ -150,13 +150,16 @@ func GetBizVideoList(ctx context.Context, videos []model.Video, userId int64) ([
 		}
 		for _, user := range users {
 			author := &biz.User{
-				Id:            int64(user.ID),
-				Name:          user.Username,
-				AvatarURL:     configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
-				WorkCount:     user.VideoCount,
-				LikeCount:     user.FavoriteCount,
-				FollowCount:   user.FollowCount,
-				FollowerCount: user.FollowerCount,
+				Id:                 int64(user.ID),
+				Name:               user.Username,
+				AvatarURL:          configs.ServerAddr + configs.AvatarURIPrefix + user.Avatar,
+				WorkCount:          user.VideoCount,
+				BackgroundImage:    user.BackgroundImage,
+				Signature:          user.Signature,
+				FavoriteCount:      user.FavoriteCount,
+				TotalFavoriteCount: user.TotalFavoriteCount,
+				FollowCount:        user.FollowCount,
+				FollowerCount:      user.FollowerCount,
 			}
 			authors[user.ID] = author
 		}
